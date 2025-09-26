@@ -27,7 +27,7 @@ function onClick() {
           <slot name="content" />
         </v-container>
       </v-main>
-      <v-footer></v-footer>
+      <v-footer class="pa-2" app border>MediClear</v-footer>
     </v-app>
   </v-responsive>
 </template>
