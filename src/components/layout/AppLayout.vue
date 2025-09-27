@@ -2,13 +2,19 @@
 import { ref, onMounted } from 'vue'
 import NavigationDrawer from './NavigationDrawer.vue'
 
-const theme = ref('light')
+//Load Variables
+const theme = ref(localStorage.getItem('theme'))
+const isDrawerOpen = ref(false)
 
-function onClick() {
+const toggleTheme = () => {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
+  localStorage.setItem('theme', theme.value)
 }
 
-const isDrawerOpen = ref(false)
+const toggleDrawer = () => {
+  isDrawerOpen.value = !isDrawerOpen.value
+  localStorage.setItem('drawer', isDrawerOpen.value)
+}
 
 onMounted(() => {
   const savedDrawerState = localStorage.getItem('drawer')
@@ -16,11 +22,6 @@ onMounted(() => {
     isDrawerOpen.value = savedDrawerState === 'true'
   }
 })
-
-const toggleDrawer = () => {
-  isDrawerOpen.value = !isDrawerOpen.value
-  localStorage.setItem('drawer', isDrawerOpen.value)
-}
 </script>
 
 <template>
@@ -34,7 +35,7 @@ const toggleDrawer = () => {
         <v-btn
           :prepend-icon="theme === 'light' ? 'mdi-weather-sunny' : 'mdi-weather-night'"
           slim
-          @click="onClick"
+          @click="toggleTheme"
         ></v-btn>
       </v-app-bar>
 
