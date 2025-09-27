@@ -24,6 +24,6 @@ const formData = {
         ></v-text-field>
       </v-col>
     </v-row>
-    <v-btn class="mt-2" type="submit" color="blue" block>sign in</v-btn>
+    <v-btn class="mt-2" type="submit" color="blue-darken-2" block>sign in</v-btn>
   </v-form>
 </template>

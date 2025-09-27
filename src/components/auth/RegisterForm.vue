@@ -80,6 +80,6 @@ const roles = ref([
         ></v-select>
       </v-col>
     </v-row>
-    <v-btn class="mt-2" type="submit" color="blue" block>Sign Up</v-btn>
+    <v-btn class="mt-2" type="submit" color="blue-darken-2" block>Sign Up</v-btn>
   </v-form>
 </template>

@@ -8,12 +8,12 @@ const isDrawerOpen = ref(false)
 
 const toggleTheme = () => {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
-  localStorage.setItem('theme', theme.value)
+  localStorage.setItem('theme', theme.value) //Set theme to local storage
 }
 
 const toggleDrawer = () => {
   isDrawerOpen.value = !isDrawerOpen.value
-  localStorage.setItem('drawer', isDrawerOpen.value)
+  localStorage.setItem('drawer', isDrawerOpen.value) //Set drawer state to local storage
 }
 
 onMounted(() => {

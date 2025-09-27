@@ -15,7 +15,8 @@ const { mobile } = useDisplay()
           <div class="mb-3 d-flex flex-column align-center">
             <v-img width="80" src="/public/images/logo.png" rounded> </v-img>
             <h3 class="font-weight-thin">MediClear</h3>
-            <span>Automated Hospital Discharge Management System</span>
+            <small v-if="mobile">Automated Hospital Discharge Management System</small>
+            <span v-else>Automated Hospital Discharge Management System</span>
           </div>
 
           <v-card :width="!mobile ? 500 : undefined">
@@ -25,9 +26,16 @@ const { mobile } = useDisplay()
             <v-card-text>
               <RegisterForm />
             </v-card-text>
+            <v-divider></v-divider>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn to="/">Sign In</v-btn>
+              <p>Already have an account?</p>
+              <RouterLink to="/" class="text-decoration-none">
+                <p class="text-blue">
+                  Sign in
+                  <v-icon icon="mdi-chevron-right"></v-icon>
+                </p>
+              </RouterLink>
             </v-card-actions>
           </v-card>
         </v-col>
