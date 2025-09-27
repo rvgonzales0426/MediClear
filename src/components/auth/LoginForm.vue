@@ -1,5 +1,4 @@
 <script setup>
-//Mock variable only
 const formData = {
   email: '',
   password: '',
