@@ -10,7 +10,7 @@ const drawer = computed({
 })
 
 const routes = [
-  ['Dashboard', 'mdi-view-dashboard-outline', '/dashboard'],
+  ['Dashboard', 'mdi-view-dashboard-outline', '/nurse-dashboard'],
   ['Patients', 'mdi-account-multiple-outline', '/patients'],
   ['Discharge Workflow', 'mdi-file-document-outline', '/workflow'],
   ['Reports', 'mdi-chart-box-outline', '/reports'],
