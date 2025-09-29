@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import DashboardCard from '@/components/DashboardCard.vue'
 import { patients } from './PatientMockData'
 import TableComponent from '@/components/TableComponent.vue'
+import PaginationComponent from '@/components/PaginationComponent.vue'
 
 const stats = computed(() => {
   return [
@@ -64,6 +65,11 @@ console.log(columns[2].color)
 
 // Optional: Add loading state if needed
 const isLoading = ref(false)
+
+//Sample PageLink
+
+const totalPage = ref(3)
+const currentPage = ref(1)
 </script>
 
 <template>
@@ -97,4 +103,5 @@ const isLoading = ref(false)
       </v-card>
     </v-col>
   </v-row>
+  <PaginationComponent v-model="currentPage" :totalPage="totalPage" />
 </template>
