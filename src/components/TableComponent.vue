@@ -48,6 +48,15 @@ defineEmits(['view'])
             <v-btn size="small" @click="$emit('view', data.id)"
               ><v-icon>mdi-eye-outline</v-icon>View</v-btn
             >
+
+            <v-btn
+              color="orange"
+              size="small"
+              prepend-icon="mdi-file-document-outline "
+              class="ml-3"
+              v-if="row.status === 'Admitted'"
+              >Request Discharge</v-btn
+            >
           </td>
         </tr>
       </template>
