@@ -2,35 +2,68 @@
 import { ref, computed } from 'vue'
 import DashboardCard from '@/components/DashboardCard.vue'
 import { patients } from './PatientMockData'
+import TableComponent from '@/components/TableComponent.vue'
 
 const stats = computed(() => {
   return [
     {
       id: 1,
-      text: 'Total Patients',
+      title: 'Total Patients',
+      text: 'Currently assigned',
       count: patients.length,
       color: 'blue',
     },
     {
       id: 2,
-      text: 'Pending Discharge',
+      title: ' Pending Discharge',
+      text: 'Awaiting approval',
       count: patients.filter((p) => p.status === 'Discharge Requested').length,
       color: 'orange',
     },
     {
       id: 3,
-      text: 'Approved',
+      title: 'Approved',
+      text: 'Ready for release',
       count: patients.filter((p) => p.status === 'Approved').length,
       color: 'green',
     },
     {
       id: 4,
-      text: 'Released',
+      title: 'Released',
+      text: 'Completed today',
       count: patients.filter((p) => p.status === 'Released').length,
       color: null,
     },
   ]
 })
+
+const columns = [
+  { key: 'patientName', label: 'Patient Name' },
+  {
+    key: 'admissionDate',
+    label: 'Admission Date',
+  },
+
+  {
+    key: 'status',
+    label: 'Status',
+    color: {
+      'Discharge Requested': 'orange',
+      Approved: 'green',
+      Released: undefined,
+      Admitted: 'blue',
+    },
+  },
+  {
+    key: 'attendingPhysician',
+    label: 'Attendting Physician',
+  },
+]
+
+console.log(columns[2].color)
+
+// Optional: Add loading state if needed
+const isLoading = ref(false)
 </script>
 
 <template>
@@ -41,13 +74,26 @@ const stats = computed(() => {
     </v-col>
 
     <v-col cols="12" md="4" lg="2">
-      <v-btn prepend-icon="mdi-account-plus-outline" color="blue-darken-2"> Add patient </v-btn>
+      <v-btn prepend-icon="mdi-account-plus-outline" size="small" color="blue-darken-2">
+        Add patient
+      </v-btn>
     </v-col>
   </v-row>
 
   <v-row>
     <v-col v-for="status in stats" :key="status.id" cols="12" lg="3" md="4">
       <DashboardCard :status="status" />
+    </v-col>
+  </v-row>
+
+  <!-- Table -->
+  <v-row>
+    <v-col cols="12" lg="12">
+      <v-card title="Assigned Patients" subtitle="Patients currently under your care">
+        <v-card-text>
+          <TableComponent :columns="columns" :data="patients" :loading="isLoading" />
+        </v-card-text>
+      </v-card>
     </v-col>
   </v-row>
 </template>
