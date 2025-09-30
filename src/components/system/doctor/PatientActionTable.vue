@@ -4,7 +4,7 @@ defineProps({
     type: Object,
     required: true,
   },
-  data: {
+  patients: {
     type: Array,
     required: true,
   },
@@ -14,7 +14,7 @@ defineProps({
   },
 })
 
-defineEmits(['view'])
+defineEmits(['view', 'approve', 'reject'])
 </script>
 
 <template>
@@ -34,27 +34,22 @@ defineEmits(['view'])
         </td>
       </tr>
       <template v-else>
-        <tr v-for="row in data" :key="row.id">
+        <tr v-for="patient in patients" :key="patient.id">
           <td v-for="column in columns" :key="column.key">
-            <template v-if="column.key === 'status'">
-              <v-chip :color="column.color[row[column.key]]">{{ row[column.key] }}</v-chip>
-            </template>
-            <template v-else>
-              {{ row[column.key] }}
-            </template>
+            {{ patient[column.key] }}
           </td>
 
-          <td class="d-flex align-center ga-2">
-            <v-btn size="small" @click="$emit('view', data.id)"
+          <td class="d-flex ga-2 align-center">
+            <v-btn size="small" @click="$emit('view', patient.id)"
               ><v-icon>mdi-eye-outline</v-icon>View</v-btn
             >
 
-            <v-btn
-              color="orange"
-              size="small"
-              prepend-icon="mdi-file-document-outline "
-              v-if="row.status === 'Admitted'"
-              >Request Discharge</v-btn
+            <v-btn size="small" color="success" @click="$emit('approve', patient.id)"
+              ><v-icon>mdi-check-circle-outline</v-icon>Approve</v-btn
+            >
+
+            <v-btn size="small" color="error" @click="$emit('reject', patient.id)"
+              ><v-icon>mdi-close-circle-outline</v-icon>Reject</v-btn
             >
           </td>
         </tr>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import DashboardCard from '@/components/DashboardCard.vue'
-import { patients } from './PatientMockData'
+import { patients } from '../PatientMockData'
 import TableComponent from '@/components/TableComponent.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
 
@@ -61,13 +61,10 @@ const columns = [
   },
 ]
 
-console.log(columns[2].color)
-
 // Optional: Add loading state if needed
 const isLoading = ref(false)
 
 //Sample PageLink
-
 const totalPage = ref(3)
 const currentPage = ref(1)
 </script>

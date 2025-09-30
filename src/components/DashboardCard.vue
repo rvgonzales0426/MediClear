@@ -9,6 +9,11 @@ const props = defineProps({
 
 <template>
   <v-card :title="props.status.title" elevation="10" class="mx-3" rounded>
+    <template v-slot:append>
+      <v-icon :color="props.status.color">
+        {{ props.status.icon }}
+      </v-icon>
+    </template>
     <v-card-text class="text-start">
       <h3 class="text-h6" :style="{ color: props.status.color }">
         {{ props.status.count }}

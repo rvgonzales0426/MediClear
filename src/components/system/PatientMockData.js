@@ -1,5 +1,4 @@
 //Sample Data Only
-
 export const patients = [
   {
     patientName: 'Juan Dela Cruz',
@@ -30,5 +29,20 @@ export const patients = [
     admissionDate: '2025-09-01',
     status: 'Discharge Requested',
     attendingPhysician: 'Dr. Teresa Castillo',
+  },
+]
+
+export const dischargingPatients = [
+  {
+    patientName: 'Sarah Johnson',
+    admissionDate: '2024-01-15',
+    requestedBy: 'Nurse Adams',
+    requestDate: '2024-01-20',
+  },
+  {
+    patientName: 'Amanda Foster',
+    admissionDate: '2024-01-18',
+    requestedBy: 'Nurse Wilson',
+    requestDate: '2024-01-20',
   },
 ]
