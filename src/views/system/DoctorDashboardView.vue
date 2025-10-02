@@ -1,12 +1,12 @@
 <script setup>
+import ManagePatientsForDoctor from '@/components/system/doctor/ManagePatientsForDoctor.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import ManagePatientsForNurse from '@/components/system/nurse/ManagePatientsForNurse.vue'
 </script>
 
 <template>
   <AppLayout>
     <template #content>
-      <ManagePatientsForNurse />
+      <ManagePatientsForDoctor />
     </template>
   </AppLayout>
 </template>
