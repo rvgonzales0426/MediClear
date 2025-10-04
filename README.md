@@ -33,3 +33,9 @@ npm run build
 ```sh
 npm run lint
 ```
+
+# <<<<<<< HEAD
+
+a582d90 (feat: added landing page)
+
+> > > > > > > e350c8e1c3ae35f0724f3aa1c3b14f5b48e2a69f
