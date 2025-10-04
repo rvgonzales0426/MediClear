@@ -1,5 +1,4 @@
 <script setup>
-import { ref, computed } from 'vue'
 import { patientRecords } from './PatientMockData'
 
 const statusColor = {
@@ -29,11 +28,28 @@ const statusColor = {
         </v-col>
 
         <v-col cols="12" lg="3" md="4">
-          <v-select variant="outlined" density="compact" />
+          <v-select
+            variant="outlined"
+            density="compact"
+            label="Selec Status"
+            :items="['All Statuses', 'Admitted', 'Discharge Requested', 'Approved', 'Released']"
+          />
         </v-col>
 
         <v-col cols="12" lg="3" md="4">
-          <v-select variant="outlined" density="compact" />
+          <v-select
+            variant="outlined"
+            density="compact"
+            label="Select Ward"
+            :items="[
+              'All Wards',
+              'General Medicine',
+              'Cardiology',
+              'Emergency',
+              'Orthopedics',
+              'Maternity',
+            ]"
+          />
         </v-col>
 
         <v-col cols="12" lg="3" md="4">
