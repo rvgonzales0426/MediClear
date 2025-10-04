@@ -1,6 +1,10 @@
 <script setup>
+import { ref } from 'vue'
 import PatientList from '@/components/system/PatientList.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import AddPatientDialog from '@/components/AddPatientDialog.vue'
+
+const isDialogVisible = ref(false)
 </script>
 
 <template>
@@ -13,12 +17,18 @@ import AppLayout from '@/components/layout/AppLayout.vue'
         </v-col>
 
         <v-col cols="12" lg="2" md="4">
-          <v-btn prepend-icon="mdi-account-plus-outline" size="small" color="blue-darken-2">
+          <v-btn
+            @click="isDialogVisible = !isDialogVisible"
+            prepend-icon="mdi-account-plus-outline"
+            size="small"
+            color="blue-darken-2"
+          >
             Add patient
           </v-btn>
         </v-col>
       </v-row>
       <PatientList />
+      <AddPatientDialog v-model:isDialogVisible="isDialogVisible" />
     </template>
   </AppLayout>
 </template>

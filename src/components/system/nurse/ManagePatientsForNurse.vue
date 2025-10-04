@@ -4,7 +4,9 @@ import DashboardCard from '@/components/DashboardCard.vue'
 import { patients } from '../PatientMockData'
 import TableComponent from '@/components/TableComponent.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
+import AddPatientDialog from '@/components/AddPatientDialog.vue'
 
+//Load variables
 const stats = computed(() => {
   return [
     {
@@ -67,6 +69,8 @@ const isLoading = ref(false)
 //Sample PageLink
 const totalPage = ref(3)
 const currentPage = ref(1)
+
+const isDialogVisible = ref(false)
 </script>
 
 <template>
@@ -77,7 +81,12 @@ const currentPage = ref(1)
     </v-col>
 
     <v-col cols="12" md="4" lg="2">
-      <v-btn prepend-icon="mdi-account-plus-outline" size="small" color="blue-darken-2">
+      <v-btn
+        prepend-icon="mdi-account-plus-outline"
+        size="small"
+        color="blue-darken-2"
+        @click="isDialogVisible = !isDialogVisible"
+      >
         Add patient
       </v-btn>
     </v-col>
@@ -101,4 +110,5 @@ const currentPage = ref(1)
     </v-col>
   </v-row>
   <PaginationComponent v-model="currentPage" :totalPage="totalPage" />
+  <AddPatientDialog v-model:isDialogVisible="isDialogVisible" />
 </template>

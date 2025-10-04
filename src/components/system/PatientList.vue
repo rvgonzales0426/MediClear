@@ -1,5 +1,7 @@
 <script setup>
+import { ref } from 'vue'
 import { patientRecords } from './PatientMockData'
+import PaginationComponent from '../PaginationComponent.vue'
 
 const statusColor = {
   'Discharge Requested': 'orange',
@@ -7,6 +9,10 @@ const statusColor = {
   Released: undefined,
   Admitted: 'blue',
 }
+
+//Sample PageLink
+const totalPage = ref(3)
+const currentPage = ref(1)
 </script>
 
 <template>
@@ -107,4 +113,6 @@ const statusColor = {
       </v-card>
     </v-col>
   </v-row>
+
+  <PaginationComponent v-model="currentPage" :totalPage="totalPage" />
 </template>
