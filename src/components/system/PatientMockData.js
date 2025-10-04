@@ -46,3 +46,51 @@ export const dischargingPatients = [
     requestDate: '2024-01-20',
   },
 ]
+
+export const patientRecords = [
+  {
+    caseNumber: 'GM-2024-0158',
+    patientName: 'Sarah Johnson',
+    ageGender: '45y / Female',
+    ward: 'General Medicine',
+    admissionDate: '2024-01-15',
+    status: 'Discharge Requested',
+    attendingPhysician: 'Dr. Smith',
+  },
+  {
+    caseNumber: 'CD-2024-0142',
+    patientName: 'Michael Chen',
+    ageGender: '62y / Male',
+    ward: 'Cardiology',
+    admissionDate: '2024-01-17',
+    status: 'Approved',
+    attendingPhysician: 'Dr. Johnson',
+  },
+  {
+    caseNumber: 'ER-2024-0189',
+    patientName: 'Emily Rodriguez',
+    ageGender: '28y / Female',
+    ward: 'Emergency',
+    admissionDate: '2024-01-19',
+    status: 'Admitted',
+    attendingPhysician: 'Dr. Williams',
+  },
+  {
+    caseNumber: 'OR-2024-0133',
+    patientName: 'Robert Thompson',
+    ageGender: '78y / Male',
+    ward: 'Orthopedics',
+    admissionDate: '2024-01-14',
+    status: 'Released',
+    attendingPhysician: 'Dr. Davis',
+  },
+  {
+    caseNumber: 'MT-2024-0167',
+    patientName: 'Amanda Foster',
+    ageGender: '35y / Female',
+    ward: 'Maternity',
+    admissionDate: '2024-01-18',
+    status: 'Discharge Requested',
+    attendingPhysician: 'Dr. Martinez',
+  },
+]

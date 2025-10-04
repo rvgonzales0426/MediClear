@@ -37,7 +37,9 @@ defineEmits(['view'])
         <tr v-for="row in data" :key="row.id">
           <td v-for="column in columns" :key="column.key">
             <template v-if="column.key === 'status'">
-              <v-chip :color="column.color[row[column.key]]">{{ row[column.key] }}</v-chip>
+              <v-chip :color="column.color[row[column.key]]" variant="flat" size="small">{{
+                row[column.key]
+              }}</v-chip>
             </template>
             <template v-else>
               {{ row[column.key] }}
