@@ -43,5 +43,29 @@ const routes = [
         color="blue-darken-2"
       ></v-list-item>
     </v-list>
+
+    <v-row class="position-fixed bottom-row">
+      <v-divider></v-divider>
+      <v-col cols="12" class="d-flex justify-center ga-2">
+        <v-avatar color="blue-lighten-2">
+          <span class="text-white text-h5">SN</span>
+        </v-avatar>
+        <div class="text-start">
+          <p class="font-weight-bold">Sample Name</p>
+          <span class="text-caption">Sample Role</span>
+        </div>
+      </v-col>
+      <v-col cols="12" lg="6" class="mx-auto">
+        <v-btn size="small" color="red" variant="text" prepend-icon="mdi-logout">Sign out</v-btn>
+      </v-col>
+    </v-row>
   </v-navigation-drawer>
 </template>
+
+<style scoped>
+.bottom-row {
+  bottom: 20px;
+  right: 12px;
+  left: 0px;
+}
+</style>

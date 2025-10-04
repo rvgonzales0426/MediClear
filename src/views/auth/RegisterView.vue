@@ -30,7 +30,7 @@ const { mobile } = useDisplay()
             <v-card-actions>
               <v-spacer></v-spacer>
               <p>Already have an account?</p>
-              <RouterLink to="/" class="text-decoration-none">
+              <RouterLink to="/login" class="text-decoration-none">
                 <p class="text-blue">
                   Sign in
                   <v-icon icon="mdi-chevron-right"></v-icon>
