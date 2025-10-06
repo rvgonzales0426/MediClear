@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { supabase } from '../../supabase.js'
 
 const props = defineProps(['isDrawerOpen'])
 const emit = defineEmits(['update:isDrawerOpen'])
@@ -8,6 +9,36 @@ const drawer = computed({
   get: () => props.isDrawerOpen,
   set: (newVal) => emit('update:isDrawerOpen', newVal),
 })
+
+const user = ref(null)
+
+onMounted(() => {
+  const userData = localStorage.getItem('user')
+  if (userData) {
+    user.value = JSON.parse(userData)
+  }
+})
+
+// Get user initials from full name
+const userInitials = computed(() => {
+  if (!user.value?.full_name) return 'U'
+  return user.value.full_name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+})
+
+const handleSignOut = async () => {
+  try {
+    await supabase.auth.signOut()
+    localStorage.removeItem('user')
+    localStorage.removeItem('session')
+    window.location.href = '/login'
+  } catch (error) {
+    console.error('Error signing out:', error)
+  }
+}
 
 const routes = [
   ['Dashboard', 'mdi-view-dashboard-outline', '/nurse-dashboard'],
@@ -43,5 +74,36 @@ const routes = [
         color="blue-darken-2"
       ></v-list-item>
     </v-list>
+
+    <v-row class="position-fixed bottom-row">
+      <v-divider></v-divider>
+      <v-col cols="12" class="d-flex justify-center ga-2">
+        <v-avatar color="blue-lighten-2">
+          <span class="text-white text-h5">{{ userInitials }}</span>
+        </v-avatar>
+        <div class="text-start">
+          <p class="font-weight-bold">{{ user?.full_name || 'User' }}</p>
+          <span class="text-caption text-capitalize">{{ user?.role || 'No Role' }}</span>
+        </div>
+      </v-col>
+      <v-col cols="12" lg="6" class="mx-auto">
+        <v-btn
+          size="small"
+          color="red"
+          variant="text"
+          prepend-icon="mdi-logout"
+          @click="handleSignOut"
+          >Sign out</v-btn
+        >
+      </v-col>
+    </v-row>
   </v-navigation-drawer>
 </template>
+
+<style scoped>
+.bottom-row {
+  bottom: 20px;
+  right: 12px;
+  left: 0px;
+}
+</style>
