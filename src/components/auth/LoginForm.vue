@@ -27,15 +27,41 @@ const validateForm = () => {
   return true
 }
 
-const handleSuccess = (data) => {
-  setMessage('success', 'Login successful! Redirecting...')
+const handleSuccess = async (data) => {
+  try {
+    // Fetch complete user data from users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role, full_name, username, phone_number')
+      .eq('email', data.user.email)
+      .single()
 
-  // Store user data
-  localStorage.setItem('user', JSON.stringify(data.user))
-  localStorage.setItem('session', JSON.stringify(data.session))
+    if (userError) throw userError
 
-  // Redirect
-  setTimeout(() => (window.location.href = '/nurse-dashboard'), 1000)
+    // Store complete user data
+    const userToStore = {
+      ...data.user,
+      ...userData, // This includes full_name, role, username, and phone_number
+    }
+    localStorage.setItem('user', JSON.stringify(userToStore))
+    localStorage.setItem('session', JSON.stringify(data.session))
+
+    setMessage('success', 'Login successful! Redirecting...')
+
+    // Redirect based on role
+    const roleRedirects = {
+      admin: '/admin-dashboard',
+      doctor: '/doctor-dashboard',
+      nurse: '/nurse-dashboard',
+      billing_clerk: '/billing-dashboard',
+      philhealth_officer: '/philhealth-dashboard',
+    }
+
+    const redirectPath = roleRedirects[userData.role] || '/login'
+    setTimeout(() => (window.location.href = redirectPath), 1000)
+  } catch (error) {
+    handleError({ message: 'Failed to fetch user role. Please try again.' })
+  }
 }
 
 const handleError = (error) => {
