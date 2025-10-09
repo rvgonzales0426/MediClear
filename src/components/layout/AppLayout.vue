@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import NavigationDrawer from './NavigationDrawer.vue'
 import { useAuthStore } from '@/stores/auth'
+import { supabase } from '@/supabase'
 
 //Load Variables
 const theme = ref(localStorage.getItem('theme'))
