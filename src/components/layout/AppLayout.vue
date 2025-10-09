@@ -7,7 +7,6 @@ const theme = ref(localStorage.getItem('theme'))
 const isDrawerOpen = ref(false)
 
 //Check if user is logged
-
 const toggleTheme = () => {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
   localStorage.setItem('theme', theme.value) //Set theme to local storage

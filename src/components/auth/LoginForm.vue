@@ -1,11 +1,13 @@
 <script setup>
 import { ref } from 'vue'
 import { supabase } from '../../supabase.js'
+import { useRouter } from 'vue-router'
 
 // Reactive state
 const formData = ref({ email: '', password: '' })
 const loading = ref(false)
 const message = ref({ type: '', text: '' })
+const router = useRouter()
 
 // Constants
 const ERROR_MESSAGES = {
@@ -50,17 +52,14 @@ const handleSuccess = async (data) => {
 
     // Redirect based on role
     const roleRedirects = {
-      admin: '/admin-dashboard',
       doctor: '/doctor-dashboard',
       nurse: '/nurse-dashboard',
-      billing_clerk: '/billing-dashboard',
-      philhealth_officer: '/philhealth-dashboard',
     }
 
     const redirectPath = roleRedirects[userData.role] || '/login'
-    setTimeout(() => (window.location.href = redirectPath), 1000)
+    setTimeout(() => router(redirectPath), 1000)
   } catch (error) {
-    handleError({ message: 'Failed to fetch user role. Please try again.' })
+    handleError({ message: error.message || 'Failed to fetch user role. Please try again.' })
   }
 }
 

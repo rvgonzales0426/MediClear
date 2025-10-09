@@ -1,6 +1,14 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { supabase } from '../../supabase.js'
+import { useRouter } from 'vue-router'
+import {
+  emailValidator,
+  passwordValidator,
+  confirmedValidator,
+  requiredValidator,
+  integerValidator,
+} from '@/utils/validators.js'
 
 // Reactive state
 const state = reactive({
@@ -23,7 +31,11 @@ const formDataDefault = {
   role: null,
 }
 
+const refVForm = ref()
+
 const formData = ref({ ...formDataDefault })
+
+const router = useRouter()
 
 // Constants
 const ROLES = [
@@ -31,143 +43,50 @@ const ROLES = [
   { title: 'Doctor', value: 'doctor' },
 ]
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-// Utility functions
-const hashPassword = async (password) => {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
-const clearMessages = () => {
-  if (state.errorMessage || state.successMessage) {
-    state.errorMessage = ''
-    state.successMessage = ''
-  }
-}
-
-// Validation
-const validateForm = () => {
-  const {
-    first_name,
-    last_name,
-    phone_number,
-    username,
-    email,
-    password,
-    password_confirmation,
-    role,
-  } = formData.value
-
-  if (!first_name || !last_name || !phone_number || !username || !email || !password || !role) {
-    state.errorMessage = 'Please fill in all required fields'
-    return false
-  }
-
-  if (password !== password_confirmation) {
-    state.errorMessage = 'Passwords do not match'
-    return false
-  }
-
-  if (password.length < 6) {
-    state.errorMessage = 'Password must be at least 6 characters long'
-    return false
-  }
-
-  if (!EMAIL_REGEX.test(email)) {
-    state.errorMessage = 'Please enter a valid email address'
-    return false
-  }
-
-  return true
-}
-
-// Error handling
-const handleSupabaseError = (error) => {
-  if (error.code === '23505') {
-    if (error.message.includes('email')) {
-      state.errorMessage = `Email "${formData.value.email}" is already registered.`
-    } else if (error.message.includes('username')) {
-      state.errorMessage = `Username "${formData.value.username}" is already taken.`
-    } else {
-      state.errorMessage = 'User already exists. Check your email and username.'
-    }
-  } else if (error.code === '42501') {
-    state.errorMessage = 'Permission denied. Check Supabase settings.'
-  } else {
-    state.errorMessage = `Registration failed: ${error.message}`
-  }
-}
-
-// Form submission
-const handleSubmit = async () => {
+const onSubmit = async () => {
   state.isLoading = true
-  state.errorMessage = ''
-  state.successMessage = ''
 
-  if (!validateForm()) {
-    state.isLoading = false
-    return
-  }
-
-  try {
-    // 1. First create the auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: formData.value.email,
-      password: formData.value.password,
-    })
-
-    if (authError) {
-      state.errorMessage = authError.message
-      throw authError
-    }
-
-    // 2. Then create the user profile in our users table
-    const full_name = `${formData.value.first_name} ${formData.value.last_name}`
-
-    const { error: profileError } = await supabase.from('users').insert([
-      {
-        user_id: authData.user.id, // Use the Supabase Auth user ID
-        full_name,
-        phone_number: formData.value.phone_number,
+  const { data, error } = await supabase.auth.signUp({
+    email: formData.value.email,
+    password: formData.value.password,
+    options: {
+      data: {
         username: formData.value.username,
-        email: formData.value.email,
-        password_hash: '', // We don't need to store password hash as Supabase Auth handles this
+        firstname: formData.value.first_name,
+        lastname: formData.value.last_name,
         role: formData.value.role,
-        created_at: new Date().toISOString(),
       },
-    ])
+    },
+  })
 
-    if (profileError) {
-      handleSupabaseError(profileError)
-      // If profile creation fails, we should clean up the auth user
-      await supabase.auth.signOut()
-      throw profileError
-    }
-
-    state.successMessage = 'Registration successful! You can now log in.'
-    formData.value = { ...formDataDefault }
-  } catch (error) {
-    console.error('Error during registration:', error)
-  } finally {
+  if (error) {
+    state.errorMessage = error.message
+  } else if (data) {
+    state.successMessage = ' Registered Successfully'
     state.isLoading = false
+    // Reset Form
+    refVForm.value?.reset()
+    router.replace(formData.value.role === 'nurse' ? '/nurse-dashboard' : '/doctor-dashboard')
   }
+}
+
+//Trigger Validators
+const onFormSubmit = () => {
+  refVForm.value?.validate().then(({ valid }) => {
+    if (valid) onSubmit()
+  })
 }
 </script>
 
 <template>
-  <v-form @submit.prevent="handleSubmit" fast-fail>
+  <v-form @submit.prevent="onFormSubmit" ref="refVForm" fast-fail>
     <v-row dense>
       <v-col cols="12" sm="6">
         <v-text-field
           v-model="formData.first_name"
           label="First Name"
           type="text"
-          required
-          @input="clearMessages"
+          :rules="[requiredValidator]"
         />
       </v-col>
       <v-col cols="12" sm="6">
@@ -175,8 +94,7 @@ const handleSubmit = async () => {
           v-model="formData.last_name"
           label="Last Name"
           type="text"
-          required
-          @input="clearMessages"
+          :rules="[requiredValidator]"
         />
       </v-col>
       <v-col cols="12">
@@ -185,8 +103,7 @@ const handleSubmit = async () => {
           label="Phone"
           type="tel"
           prepend-inner-icon="mdi-phone-outline"
-          required
-          @input="clearMessages"
+          :rules="[integerValidator]"
         />
       </v-col>
       <v-col cols="12">
@@ -195,8 +112,7 @@ const handleSubmit = async () => {
           label="Username"
           type="text"
           prepend-inner-icon="mdi-account-outline"
-          required
-          @input="clearMessages"
+          :rules="[requiredValidator]"
         />
       </v-col>
       <v-col cols="12">
@@ -205,8 +121,7 @@ const handleSubmit = async () => {
           label="Email"
           type="email"
           prepend-inner-icon="mdi-email-outline"
-          required
-          @input="clearMessages"
+          :rules="[emailValidator]"
         />
       </v-col>
       <v-col cols="12">
@@ -217,8 +132,7 @@ const handleSubmit = async () => {
           @click:append-inner="state.isPasswordVisible = !state.isPasswordVisible"
           :append-inner-icon="state.isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
           prepend-inner-icon="mdi-lock-outline"
-          required
-          @input="clearMessages"
+          :rules="[passwordValidator]"
         />
       </v-col>
       <v-col cols="12">
@@ -229,8 +143,10 @@ const handleSubmit = async () => {
           @click:append-inner="state.isPasswordConfirmVisible = !state.isPasswordConfirmVisible"
           :append-inner-icon="state.isPasswordConfirmVisible ? 'mdi-eye' : 'mdi-eye-off'"
           prepend-inner-icon="mdi-lock-outline"
-          required
-          @input="clearMessages"
+          :rules="[
+            requiredValidator,
+            confirmedValidator(formData.password_confirmation, formData.password),
+          ]"
         />
       </v-col>
       <v-col cols="12">
@@ -242,8 +158,7 @@ const handleSubmit = async () => {
           :items="ROLES"
           item-value="value"
           item-title="title"
-          required
-          @update:model-value="clearMessages"
+          :rules="[requiredValidator]"
         />
       </v-col>
     </v-row>
