@@ -2,9 +2,12 @@
 import { computed, ref, onMounted } from 'vue'
 import { supabase } from '../../supabase.js'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.js'
 
 const props = defineProps(['isDrawerOpen'])
 const emit = defineEmits(['update:isDrawerOpen'])
+
+const authStore = useAuthStore()
 
 const drawer = computed({
   get: () => props.isDrawerOpen,
@@ -13,6 +16,8 @@ const drawer = computed({
 
 const router = useRouter()
 const user = ref(null)
+
+const isLoading = ref(false)
 
 onMounted(() => {
   const userData = localStorage.getItem('user')
@@ -32,13 +37,17 @@ const userInitials = computed(() => {
 })
 
 const handleSignOut = async () => {
+  isLoading.value = true
   try {
-    await supabase.auth.signOut()
+    await authStore.signOutUser() // Use auth store logout method
     localStorage.removeItem('user')
     localStorage.removeItem('session')
+
     router.replace('/login')
   } catch (error) {
     console.error('Error signing out:', error)
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -94,6 +103,7 @@ const routes = [
           color="red"
           variant="text"
           prepend-icon="mdi-logout"
+          :loading="isLoading"
           @click="handleSignOut"
           >Sign out</v-btn
         >
