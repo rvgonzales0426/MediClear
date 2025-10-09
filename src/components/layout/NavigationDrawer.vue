@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { supabase } from '../../supabase.js'
+import { useRouter } from 'vue-router'
 
 const props = defineProps(['isDrawerOpen'])
 const emit = defineEmits(['update:isDrawerOpen'])
@@ -10,6 +11,7 @@ const drawer = computed({
   set: (newVal) => emit('update:isDrawerOpen', newVal),
 })
 
+const router = useRouter()
 const user = ref(null)
 
 onMounted(() => {
@@ -34,7 +36,7 @@ const handleSignOut = async () => {
     await supabase.auth.signOut()
     localStorage.removeItem('user')
     localStorage.removeItem('session')
-    window.location.href = '/login'
+    router.replace('/login')
   } catch (error) {
     console.error('Error signing out:', error)
   }
@@ -42,7 +44,7 @@ const handleSignOut = async () => {
 
 const routes = [
   ['Dashboard', 'mdi-view-dashboard-outline', '/nurse-dashboard'],
-  ['Patients', 'mdi-account-multiple-outline', '/patients'],
+  ['Patients', 'mdi-account-multiple-outline', '/patient-record'],
   ['Discharge Workflow', 'mdi-file-document-outline', '/workflow'],
   ['Reports', 'mdi-chart-box-outline', '/reports'],
 ]

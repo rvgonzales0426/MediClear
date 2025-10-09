@@ -1,12 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import NavigationDrawer from './NavigationDrawer.vue'
+import { useAuthStore } from '@/stores/auth'
 
 //Load Variables
 const theme = ref(localStorage.getItem('theme'))
 const isDrawerOpen = ref(false)
 
-//Check if user is logged
+const authStore = useAuthStore()
+
 const toggleTheme = () => {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
   localStorage.setItem('theme', theme.value) //Set theme to local storage
@@ -17,7 +19,9 @@ const toggleDrawer = () => {
   localStorage.setItem('drawer', isDrawerOpen.value) //Set drawer state to local storage
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await authStore.getAuthSession()
+
   const savedDrawerState = localStorage.getItem('drawer')
   if (savedDrawerState !== null) {
     isDrawerOpen.value = savedDrawerState === 'true'
@@ -28,9 +32,9 @@ onMounted(() => {
 <template>
   <v-responsive class="border rounded">
     <v-app :theme="theme">
-      <NavigationDrawer v-model:isDrawerOpen="isDrawerOpen" />
+      <NavigationDrawer v-model:isDrawerOpen="isDrawerOpen" v-if="authStore.isLogged" />
       <v-app-bar class="px-3">
-        <v-app-bar-nav-icon @click="toggleDrawer" />
+        <v-app-bar-nav-icon @click="toggleDrawer" v-if="authStore.isLogged" />
         <v-spacer></v-spacer>
 
         <v-btn
