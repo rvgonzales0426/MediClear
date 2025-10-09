@@ -55,6 +55,8 @@ const formData = ref({
           <v-col cols="12">
             <v-date-input label="Addmission Date" v-model="formData.addmission_date" />
           </v-col>
+
+          <v-btn block color="blue-darken-2" ripple>Add</v-btn>
         </v-row>
       </v-card-text>
       <v-card-actions>

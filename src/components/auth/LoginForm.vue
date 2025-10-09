@@ -73,7 +73,7 @@ const onFormSubmit = () => {
         <v-text-field
           v-model="formData.password"
           label="Password"
-          type="password"
+          :type="state.isPasswordVisible ? 'password' : 'text'"
           prepend-inner-icon="mdi-lock-outline"
           @click:append-inner="state.isPasswordVisible = !state.isPasswordVisible"
           :append-inner-icon="state.isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"

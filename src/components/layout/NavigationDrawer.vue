@@ -80,12 +80,12 @@ const routes = [
       <v-col cols="12" class="d-flex justify-center ga-2">
         <v-avatar color="blue-lighten-2">
           <span class="text-white text-h5">{{
-            getAvatarText(authStore.userData?.first_name + ' ' + authStore.userData?.last_name)
+            getAvatarText(authStore.userData?.firstname + ' ' + authStore.userData?.lastname)
           }}</span>
         </v-avatar>
         <div class="text-start">
           <p class="font-weight-bold">
-            {{ authStore.userData?.first_name + ' ' + authStore.userData?.last_name || 'User' }}
+            {{ authStore.userData?.firstname + ' ' + authStore.userData?.lastname || 'User' }}
           </p>
           <span class="text-caption text-capitalize">{{
             authStore.userData?.role || 'No Role'

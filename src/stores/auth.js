@@ -3,6 +3,7 @@ import { supabase } from '@/supabase'
 import { ref, computed } from 'vue'
 
 export const useAuthStore = defineStore('auth', () => {
+  //LOGGED VALUES/STATES ARE  FOR DEBUGGING ONLY
   const userData = ref(null)
 
   const isAuthenticated = computed(() => !!userData.value)
@@ -34,6 +35,8 @@ export const useAuthStore = defineStore('auth', () => {
     } = await supabase.auth.getUser()
 
     userData.value = { id, email, ...user_metadata }
+
+    console.log(userData.value)
   }
 
   async function signOutUser() {
