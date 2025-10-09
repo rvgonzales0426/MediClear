@@ -42,6 +42,7 @@ const onSubmit = async () => {
   } else if (data) {
     state.successMessage = 'Login Successfully'
 
+    await authStore.getUserInformation()
     refVForm.value?.reset()
     router.replace(authStore.userData?.role === 'nurse' ? '/nurse-dashboard' : 'doctor-dashboard') //Check role from session
   }
@@ -73,7 +74,7 @@ const onFormSubmit = () => {
         <v-text-field
           v-model="formData.password"
           label="Password"
-          :type="state.isPasswordVisible ? 'password' : 'text'"
+          :type="state.isPasswordVisible ? 'text' : 'password'"
           prepend-inner-icon="mdi-lock-outline"
           @click:append-inner="state.isPasswordVisible = !state.isPasswordVisible"
           :append-inner-icon="state.isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
