@@ -1,8 +1,8 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
-import { supabase } from '../../supabase.js'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
+import { getAvatarText } from '@/utils/helpers.js'
 
 const props = defineProps(['isDrawerOpen'])
 const emit = defineEmits(['update:isDrawerOpen'])
@@ -19,29 +19,14 @@ const user = ref(null)
 
 const isLoading = ref(false)
 
-onMounted(() => {
-  const userData = localStorage.getItem('user')
-  if (userData) {
-    user.value = JSON.parse(userData)
-  }
-})
-
-// Get user initials from full name
-const userInitials = computed(() => {
-  if (!user.value?.full_name) return 'U'
-  return user.value.full_name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
+onMounted(async () => {
+  await authStore.getUserInformation() // get user info from store
 })
 
 const handleSignOut = async () => {
   isLoading.value = true
   try {
     await authStore.signOutUser() // Use auth store logout method
-    localStorage.removeItem('user')
-    localStorage.removeItem('session')
 
     router.replace('/login')
   } catch (error) {
@@ -52,7 +37,11 @@ const handleSignOut = async () => {
 }
 
 const routes = [
-  ['Dashboard', 'mdi-view-dashboard-outline', '/nurse-dashboard'],
+  [
+    'Dashboard',
+    'mdi-view-dashboard-outline',
+    authStore.userData?.role === 'nurse' ? '/nurse-dashboard' : '/doctor-dashboard', //check route navigation  by user role
+  ],
   ['Patients', 'mdi-account-multiple-outline', '/patient-record'],
   ['Discharge Workflow', 'mdi-file-document-outline', '/workflow'],
   ['Reports', 'mdi-chart-box-outline', '/reports'],
@@ -90,11 +79,17 @@ const routes = [
       <v-divider></v-divider>
       <v-col cols="12" class="d-flex justify-center ga-2">
         <v-avatar color="blue-lighten-2">
-          <span class="text-white text-h5">{{ userInitials }}</span>
+          <span class="text-white text-h5">{{
+            getAvatarText(authStore.userData?.first_name + ' ' + authStore.userData?.last_name)
+          }}</span>
         </v-avatar>
         <div class="text-start">
-          <p class="font-weight-bold">{{ user?.full_name || 'User' }}</p>
-          <span class="text-caption text-capitalize">{{ user?.role || 'No Role' }}</span>
+          <p class="font-weight-bold">
+            {{ authStore.userData?.first_name + ' ' + authStore.userData?.last_name || 'User' }}
+          </p>
+          <span class="text-caption text-capitalize">{{
+            authStore.userData?.role || 'No Role'
+          }}</span>
         </div>
       </v-col>
       <v-col cols="12" lg="6" class="mx-auto">
