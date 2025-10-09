@@ -114,33 +114,44 @@ const handleSubmit = async () => {
   }
 
   try {
+    // 1. First create the auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: formData.value.email,
+      password: formData.value.password,
+    })
+
+    if (authError) {
+      state.errorMessage = authError.message
+      throw authError
+    }
+
+    // 2. Then create the user profile in our users table
     const full_name = `${formData.value.first_name} ${formData.value.last_name}`
-    const hashedPassword = await hashPassword(formData.value.password)
 
-    const { data, error } = await supabase
-      .from('users')
-      .insert([
-        {
-          full_name,
-          phone_number: formData.value.phone_number,
-          username: formData.value.username,
-          email: formData.value.email,
-          password_hash: hashedPassword,
-          role: formData.value.role,
-          created_at: new Date().toISOString(),
-        },
-      ])
-      .select()
+    const { error: profileError } = await supabase.from('users').insert([
+      {
+        user_id: authData.user.id, // Use the Supabase Auth user ID
+        full_name,
+        phone_number: formData.value.phone_number,
+        username: formData.value.username,
+        email: formData.value.email,
+        password_hash: '', // We don't need to store password hash as Supabase Auth handles this
+        role: formData.value.role,
+        created_at: new Date().toISOString(),
+      },
+    ])
 
-    if (error) {
-      handleSupabaseError(error)
-      throw error
+    if (profileError) {
+      handleSupabaseError(profileError)
+      // If profile creation fails, we should clean up the auth user
+      await supabase.auth.signOut()
+      throw profileError
     }
 
     state.successMessage = 'Registration successful! You can now log in.'
     formData.value = { ...formDataDefault }
   } catch (error) {
-    console.error('Error saving user:', error)
+    console.error('Error during registration:', error)
   } finally {
     state.isLoading = false
   }
