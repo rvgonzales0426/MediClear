@@ -24,7 +24,6 @@ const formDataDefault = {
   first_name: '',
   last_name: '',
   phone_number: '',
-  username: '',
   email: '',
   password: '',
   password_confirmation: '',
@@ -51,7 +50,6 @@ const onSubmit = async () => {
     password: formData.value.password,
     options: {
       data: {
-        username: formData.value.username,
         firstname: formData.value.first_name,
         lastname: formData.value.last_name,
         role: formData.value.role,
@@ -104,15 +102,6 @@ const onFormSubmit = () => {
           type="tel"
           prepend-inner-icon="mdi-phone-outline"
           :rules="[integerValidator]"
-        />
-      </v-col>
-      <v-col cols="12">
-        <v-text-field
-          v-model="formData.username"
-          label="Username"
-          type="text"
-          prepend-inner-icon="mdi-account-outline"
-          :rules="[requiredValidator]"
         />
       </v-col>
       <v-col cols="12">
