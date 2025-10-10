@@ -5,27 +5,26 @@ import { ref, computed } from 'vue'
 export const useAuthStore = defineStore('auth', () => {
   //LOGGED VALUES/STATES ARE  FOR DEBUGGING ONLY
   const userData = ref(null)
+  const userSession = ref(null)
 
-  const isAuthenticated = computed(() => !!userData.value)
-
+  //listerForSessions
   async function listenToAuthChanges() {
     supabase.auth.onAuthStateChange((_, session) => {
-      userData.value = session?.user || null
-      console.log('Logging current session', userData.value)
+      userSession.value = session?.user || null
+      console.log('Logging current session', userSession.value)
     })
   }
 
   //Get User Info
   async function getUserInformation() {
     const {
-      data: { user },
+      data: {
+        user: { email, id, user_metadata },
+      },
     } = await supabase.auth.getUser()
 
-    if (user) {
-      const { email, id, user_metadata } = user
-      userData.value = { id, email, ...user_metadata }
-      console.log(userData.value)
-    }
+    userData.value = { id, email, ...user_metadata }
+    console.log(userData.value)
   }
 
   //Signout user
@@ -49,6 +48,6 @@ export const useAuthStore = defineStore('auth', () => {
     listenToAuthChanges,
     //States
     userData,
-    isAuthenticated,
+    userSession,
   }
 })
