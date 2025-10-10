@@ -19,13 +19,9 @@ const toggleDrawer = () => {
   localStorage.setItem('drawer', isDrawerOpen.value) //Set drawer state to local storage
 }
 
-const isLogged = computed(() => authStore.isAuthenticated)
-
-console.log(isLogged.value)
+// const isLogged = computed(() => authStore.isAuthenticated)
 
 onMounted(async () => {
-  await authStore.getAuthSession()
-
   const savedDrawerState = localStorage.getItem('drawer')
   if (savedDrawerState !== null) {
     isDrawerOpen.value = savedDrawerState === 'true'
@@ -36,9 +32,9 @@ onMounted(async () => {
 <template>
   <v-responsive class="border rounded">
     <v-app :theme="theme">
-      <NavigationDrawer v-model:isDrawerOpen="isDrawerOpen" v-if="isLogged" />
+      <NavigationDrawer v-model:isDrawerOpen="isDrawerOpen" v-if="authStore.userData" />
       <v-app-bar class="px-3">
-        <v-app-bar-nav-icon @click="toggleDrawer" v-if="isLogged" />
+        <v-app-bar-nav-icon @click="toggleDrawer" v-if="authStore.userData" />
         <v-spacer></v-spacer>
 
         <v-btn

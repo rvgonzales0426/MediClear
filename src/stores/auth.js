@@ -7,36 +7,25 @@ export const useAuthStore = defineStore('auth', () => {
   const userData = ref(null)
 
   const isAuthenticated = computed(() => !!userData.value)
-  //Fetch User Session
-  async function getAuthSession() {
-    const { data, error } = await supabase.auth.getSession()
 
-    console.log('Session data:', data)
-    console.log('Session error:', error)
-
-    if (error) return false
-
-    if (data.session) {
-      const { id, email, user_metadata } = data.session.user
-      userData.value = { id, email, ...user_metadata }
-      console.log('Logged status', isAuthenticated.value)
-      console.log('User data set:', userData.value)
-    }
-
-    return !!data.session
+  async function listenToAuthChanges() {
+    supabase.auth.onAuthStateChange((_, session) => {
+      userData.value = session?.user || null
+      console.log('Logging current session', userData.value)
+    })
   }
 
   //Get User Info
   async function getUserInformation() {
     const {
-      data: {
-        user: { id, email, user_metadata },
-      },
+      data: { user },
     } = await supabase.auth.getUser()
 
-    userData.value = { id, email, ...user_metadata }
-
-    console.log(userData.value)
+    if (user) {
+      const { email, id, user_metadata } = user
+      userData.value = { id, email, ...user_metadata }
+      console.log(userData.value)
+    }
   }
 
   //Signout user
@@ -54,9 +43,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     //Actions
-    getAuthSession,
+    // getAuthSession,
     getUserInformation,
     signOutUser,
+    listenToAuthChanges,
     //States
     userData,
     isAuthenticated,
