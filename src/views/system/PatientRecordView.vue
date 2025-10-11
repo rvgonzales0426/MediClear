@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import PatientList from '@/components/system/PatientList.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import AddPatientDialog from '@/components/AddPatientDialog.vue'
+import PatientDialog from '@/components/PatientDialog.vue'
 
 const isDialogVisible = ref(false)
 </script>
@@ -28,7 +28,7 @@ const isDialogVisible = ref(false)
         </v-col>
       </v-row>
       <PatientList />
-      <AddPatientDialog v-model:isDialogVisible="isDialogVisible" />
+      <PatientDialog v-model:isDialogVisible="isDialogVisible" />
     </template>
   </AppLayout>
 </template>

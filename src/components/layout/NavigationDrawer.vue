@@ -38,7 +38,7 @@ const routes = [
     authStore.userData?.role === 'nurse' ? '/nurse-dashboard' : '/doctor-dashboard', //check route navigation  by user role
   ],
   ['Patients', 'mdi-account-multiple-outline', '/patient-record'],
-  ['Discharge Workflow', 'mdi-file-document-outline', '/workflow'],
+  ['Discharge Workflow', 'mdi-file-document-outline', '/work-flow'],
   ['Reports', 'mdi-chart-box-outline', '/reports'],
 ]
 
