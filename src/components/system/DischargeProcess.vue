@@ -222,7 +222,7 @@ const averages = computed(() => {
             {{ average.totalPatients }}
           </h3>
 
-          <small class="text-caption"> {{ average.text }}% </small>
+          <small class="text-caption"> {{ average.text }} </small>
         </v-card-text>
       </v-card>
     </v-col>
