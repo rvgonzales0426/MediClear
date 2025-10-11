@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import NavigationDrawer from './NavigationDrawer.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -19,13 +19,8 @@ const toggleDrawer = () => {
   localStorage.setItem('drawer', isDrawerOpen.value) //Set drawer state to local storage
 }
 
-const isLogged = computed(() => authStore.isAuthenticated)
-
-console.log(isLogged.value)
-
 onMounted(async () => {
-  await authStore.getAuthSession()
-
+  await authStore.listenToAuthChanges()
   const savedDrawerState = localStorage.getItem('drawer')
   if (savedDrawerState !== null) {
     isDrawerOpen.value = savedDrawerState === 'true'
@@ -36,9 +31,9 @@ onMounted(async () => {
 <template>
   <v-responsive class="border rounded">
     <v-app :theme="theme">
-      <NavigationDrawer v-model:isDrawerOpen="isDrawerOpen" v-if="isLogged" />
+      <NavigationDrawer v-model:isDrawerOpen="isDrawerOpen" v-if="authStore.userSession" />
       <v-app-bar class="px-3">
-        <v-app-bar-nav-icon @click="toggleDrawer" v-if="isLogged" />
+        <v-app-bar-nav-icon @click="toggleDrawer" v-if="authStore.userSession" />
         <v-spacer></v-spacer>
 
         <v-btn

@@ -15,13 +15,8 @@ const drawer = computed({
 })
 
 const router = useRouter()
-const user = ref(null)
 
 const isLoading = ref(false)
-
-onMounted(async () => {
-  await authStore.getUserInformation() // get user info from store
-})
 
 const handleSignOut = async () => {
   isLoading.value = true
@@ -43,9 +38,13 @@ const routes = [
     authStore.userData?.role === 'nurse' ? '/nurse-dashboard' : '/doctor-dashboard', //check route navigation  by user role
   ],
   ['Patients', 'mdi-account-multiple-outline', '/patient-record'],
-  ['Discharge Workflow', 'mdi-file-document-outline', '/workflow'],
+  ['Discharge Workflow', 'mdi-file-document-outline', '/work-flow'],
   ['Reports', 'mdi-chart-box-outline', '/reports'],
 ]
+
+onMounted(async () => {
+  await authStore.getUserInformation() // get user info from store
+})
 </script>
 
 <template>
@@ -75,7 +74,7 @@ const routes = [
       ></v-list-item>
     </v-list>
 
-    <v-row class="position-fixed bottom-row">
+    <v-row class="position-fixed bottom-row" v-if="authStore.userData">
       <v-divider></v-divider>
       <v-col cols="12" class="d-flex justify-center ga-2">
         <v-avatar color="blue-lighten-2">

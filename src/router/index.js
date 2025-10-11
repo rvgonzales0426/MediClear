@@ -5,6 +5,7 @@ import NurseDashboardView from '@/views/system/NurseDashboardView.vue'
 import LandingPageView from '@/views/Guest/LandingPageView.vue'
 import DoctorDashboardView from '@/views/system/DoctorDashboardView.vue'
 import PatientRecordView from '@/views/system/PatientRecordView.vue'
+import DischargeWorkflowView from '@/views/system/DischargeWorkflowView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,6 +42,12 @@ const router = createRouter({
       path: '/patient-record',
       name: 'patient-record',
       component: PatientRecordView,
+    },
+
+    {
+      path: '/work-flow',
+      name: 'work-flow',
+      component: DischargeWorkflowView,
     },
   ],
 })

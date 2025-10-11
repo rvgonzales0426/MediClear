@@ -4,7 +4,7 @@ import DashboardCard from '@/components/DashboardCard.vue'
 import { patients } from '../PatientMockData'
 import TableComponent from '@/components/TableComponent.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
-import AddPatientDialog from '@/components/AddPatientDialog.vue'
+import PatientDialog from '@/components/PatientDialog.vue'
 
 //Load variables
 const stats = computed(() => {
@@ -110,5 +110,5 @@ const isDialogVisible = ref(false)
     </v-col>
   </v-row>
   <PaginationComponent v-model="currentPage" :totalPage="totalPage" />
-  <AddPatientDialog v-model:isDialogVisible="isDialogVisible" />
+  <PatientDialog v-model:isDialogVisible="isDialogVisible" />
 </template>
