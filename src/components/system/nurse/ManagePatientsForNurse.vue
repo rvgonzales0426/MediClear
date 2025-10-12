@@ -4,7 +4,7 @@ import DashboardCard from '@/components/DashboardCard.vue'
 import { patients } from '../PatientMockData'
 import TableComponent from '@/components/TableComponent.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
-import PatientDialog from '@/components/PatientDialog.vue'
+import PatientDialog from '@/views/system/partials/PatientDialog.vue'
 
 //Load variables
 const stats = computed(() => {

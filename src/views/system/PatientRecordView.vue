@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import PatientList from '@/components/system/PatientList.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import PatientDialog from '@/components/PatientDialog.vue'
+import PatientDialog from './partials/PatientDialog.vue'
 
 const isDialogVisible = ref(false)
 </script>

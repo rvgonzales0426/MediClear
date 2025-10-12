@@ -15,7 +15,7 @@ const drawer = computed({
 })
 
 const router = useRouter()
-
+const assignedRoutes = ref(null)
 const isLoading = ref(false)
 
 const handleSignOut = async () => {
@@ -31,19 +31,25 @@ const handleSignOut = async () => {
   }
 }
 
-const routes = [
+const routes = computed(() => [
   [
     'Dashboard',
     'mdi-view-dashboard-outline',
-    authStore.userData?.role === 'nurse' ? '/nurse-dashboard' : '/doctor-dashboard', //check route navigation  by user role
+    assignedRoutes.value, // Now this will update when assignedRoutes changes
   ],
   ['Patients', 'mdi-account-multiple-outline', '/patient-record'],
   ['Discharge Workflow', 'mdi-file-document-outline', '/work-flow'],
   ['Reports', 'mdi-chart-box-outline', '/reports'],
-]
+])
 
 onMounted(async () => {
   await authStore.getUserInformation() // get user info from store
+
+  if (authStore.userData?.role === 'nurse') {
+    assignedRoutes.value = '/nurse-dashboard'
+  } else if (authStore.userData?.role === 'doctor') {
+    assignedRoutes.value = '/doctor-dashboard'
+  }
 })
 </script>
 
@@ -63,17 +69,16 @@ onMounted(async () => {
 
     <v-list>
       <v-list-item
-        v-for="([title, icon, routes], i) in routes"
+        v-for="([title, icon, route], i) in routes"
         :key="i"
         :prepend-icon="icon"
         :title="title"
         :value="title"
-        :to="routes"
+        :to="route"
         ripple
         color="blue-darken-2"
       ></v-list-item>
     </v-list>
-
     <v-row class="position-fixed bottom-row" v-if="authStore.userData">
       <v-divider></v-divider>
       <v-col cols="12" class="d-flex justify-center ga-2">
