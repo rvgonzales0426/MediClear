@@ -1,97 +1,98 @@
 <script setup>
-import { ref } from 'vue'
-import { supabase } from '../../supabase.js'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/stores/auth.js'
+import { emailValidator, passwordValidator } from '@/utils/validators.js'
 
-// Reactive state
-const formData = ref({ email: '', password: '' })
-const loading = ref(false)
-const message = ref({ type: '', text: '' })
+const router = useRouter()
+const authStore = useAuthStore()
+const { signIn, isLoading, errorMessage, successMessage, init } = useAuth()
 
-// Constants
-const ERROR_MESSAGES = {
-  'Invalid login credentials': 'Invalid email or password. Please check your credentials.',
-  'Email not confirmed': 'Please confirm your email address before logging in.',
-  'Too many requests': 'Too many login attempts. Please try again later.',
+// Initialize auth on component mount
+onMounted(() => {
+  init()
+})
+
+const state = reactive({
+  isPasswordVisible: false,
+})
+
+const formDataDefault = {
+  email: '',
+  password: '',
 }
 
-// Methods
-const setMessage = (type, text) => {
-  message.value = { type, text }
-}
+const formData = ref({
+  ...formDataDefault,
+})
 
-const validateForm = () => {
-  if (!formData.value.email || !formData.value.password) {
-    setMessage('error', 'Please fill in all fields')
-    return false
-  }
-  return true
-}
+const refVForm = ref()
 
-const handleSuccess = async (data) => {
+const onSubmit = async () => {
   try {
-    // Fetch complete user data from users table
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role, full_name, username, phone_number')
-      .eq('email', data.user.email)
-      .single()
+    // Clear previous messages
+    errorMessage.value = ''
+    successMessage.value = ''
 
-    if (userError) throw userError
+    // Call signIn with email and password
+    const { data, error } = await signIn(formData.value.email, formData.value.password)
 
-    // Store complete user data
-    const userToStore = {
-      ...data.user,
-      ...userData, // This includes full_name, role, username, and phone_number
-    }
-    localStorage.setItem('user', JSON.stringify(userToStore))
-    localStorage.setItem('session', JSON.stringify(data.session))
-
-    setMessage('success', 'Login successful! Redirecting...')
-
-    // Redirect based on role
-    const roleRedirects = {
-      admin: '/admin-dashboard',
-      doctor: '/doctor-dashboard',
-      nurse: '/nurse-dashboard',
-      billing_clerk: '/billing-dashboard',
-      philhealth_officer: '/philhealth-dashboard',
+    if (error) {
+      console.error('Sign in error:', error)
+      return
     }
 
-    const redirectPath = roleRedirects[userData.role] || '/login'
-    setTimeout(() => (window.location.href = redirectPath), 1000)
-  } catch (error) {
-    handleError({ message: 'Failed to fetch user role. Please try again.' })
+    if (data?.user) {
+      console.log('Login successful:', data.user)
+
+      // Update auth store if you're using it
+      if (authStore && authStore.getUserInformation) {
+        await authStore.getUserInformation()
+      }
+
+      refVForm.value?.reset()
+
+      // Redirect based on user role
+      await redirectBasedOnRole(data.user.role)
+    }
+  } catch (err) {
+    console.error('Login error:', err)
   }
 }
 
-const handleError = (error) => {
-  const errorText = ERROR_MESSAGES[error.message] || `Login failed: ${error.message}`
-  setMessage('error', errorText)
+// Function to handle role-based redirection
+const redirectBasedOnRole = async (role) => {
+  const routes = {
+    admin: '/admin-dashboard',
+    doctor: '/doctor-dashboard',
+    nurse: '/nurse-dashboard',
+    billing_clerk: '/billing-dashboard',
+    philhealth_officer: '/philhealth-dashboard',
+  }
+
+  const targetRoute = routes[role] || '/dashboard'
+
+  console.log(`Redirecting ${role} to: ${targetRoute}`)
+  await router.replace(targetRoute)
 }
 
-const handleLogin = async () => {
-  if (!validateForm()) return
+// Trigger Validators
+const onFormSubmit = () => {
+  refVForm.value?.validate().then(({ valid }) => {
+    if (valid) onSubmit()
+  })
+}
 
-  loading.value = true
-  setMessage('', '')
-
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: formData.value.email.trim().toLowerCase(),
-      password: formData.value.password,
-    })
-
-    error ? handleError(error) : handleSuccess(data)
-  } catch (error) {
-    handleError(error)
-  } finally {
-    loading.value = false
-  }
+// Clear messages when form is interacted with
+const clearMessages = () => {
+  errorMessage.value = ''
+  successMessage.value = ''
 }
 </script>
 
 <template>
-  <v-form fast-fail @submit.prevent="handleLogin">
+  <v-form fast-fail @submit.prevent="onFormSubmit" ref="refVForm" @input="clearMessages">
     <v-row dense>
       <v-col cols="12">
         <v-text-field
@@ -99,9 +100,10 @@ const handleLogin = async () => {
           label="Email"
           type="email"
           prepend-inner-icon="mdi-email-outline"
-          :disabled="loading"
-          required
           placeholder="Enter your registered email"
+          :rules="[emailValidator]"
+          autocomplete="email"
+          @focus="clearMessages"
         />
       </v-col>
 
@@ -109,27 +111,55 @@ const handleLogin = async () => {
         <v-text-field
           v-model="formData.password"
           label="Password"
-          type="password"
+          :type="state.isPasswordVisible ? 'text' : 'password'"
           prepend-inner-icon="mdi-lock-outline"
-          :disabled="loading"
-          required
+          @click:append-inner="state.isPasswordVisible = !state.isPasswordVisible"
+          :append-inner-icon="state.isPasswordConfirmVisible ? 'mdi-eye' : 'mdi-eye-off'"
           placeholder="Enter your password"
+          :rules="[passwordValidator]"
+          autocomplete="current-password"
+          @focus="clearMessages"
         />
       </v-col>
     </v-row>
 
     <!-- Message Alert -->
-    <v-alert v-if="message.text" :type="message.type" density="compact" class="mb-4">
-      {{ message.text }}
+    <v-alert
+      v-if="errorMessage"
+      type="error"
+      density="compact"
+      class="mb-4"
+      closable
+      @click:close="errorMessage = ''"
+    >
+      <div class="d-flex align-center">
+        <v-icon icon="mdi-alert-circle" class="mr-2" />
+        <span>{{ errorMessage }}</span>
+      </div>
+    </v-alert>
+
+    <v-alert
+      v-if="successMessage"
+      type="success"
+      density="compact"
+      class="mb-4"
+      closable
+      @click:close="successMessage = ''"
+    >
+      <div class="d-flex align-center">
+        <v-icon icon="mdi-check-circle" class="mr-2" />
+        <span>{{ successMessage }}</span>
+      </div>
     </v-alert>
 
     <v-btn
       type="submit"
       color="blue-darken-2"
       block
-      :loading="loading"
-      :disabled="loading"
+      :loading="isLoading"
+      :disabled="isLoading"
       class="mt-2"
+      size="large"
     >
       <template v-slot:loader>
         <v-progress-circular indeterminate size="20" width="2" />

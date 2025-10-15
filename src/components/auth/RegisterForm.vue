@@ -1,14 +1,24 @@
 <script setup>
 import { ref, reactive } from 'vue'
+<<<<<<< Updated upstream
 import { supabase } from '../../supabase.js'
+=======
+import { useAuth } from '@/composables/useAuth'
+import {
+  emailValidator,
+  passwordValidator,
+  confirmedValidator,
+  requiredValidator,
+  integerValidator,
+} from '@/utils/validators.js'
+>>>>>>> Stashed changes
+
+const { signUp, isLoading, errorMessage, successMessage } = useAuth()
 
 // Reactive state
 const state = reactive({
   isPasswordVisible: false,
   isPasswordConfirmVisible: false,
-  isLoading: false,
-  errorMessage: '',
-  successMessage: '',
 })
 
 // Form data
@@ -23,6 +33,7 @@ const formDataDefault = {
   role: null,
 }
 
+const refVForm = ref()
 const formData = ref({ ...formDataDefault })
 
 // Constants
@@ -155,11 +166,61 @@ const handleSubmit = async () => {
   } finally {
     state.isLoading = false
   }
+const onSubmit = async () => {
+  try {
+    // Ensure role is selected
+    if (!formData.value.role) {
+      errorMessage.value = 'Please select a role'
+      return
+    }
+
+    const { data, error } = await signUp({
+      first_name: formData.value.first_name,
+      last_name: formData.value.last_name,
+      phone_number: formData.value.phone_number,
+      email: formData.value.email,
+      password: formData.value.password,
+      role: formData.value.role,
+    })
+
+    if (error) {
+      console.error('Registration error:', error)
+      return
+    }
+
+    if (data) {
+      console.log('Registration successful:', data)
+      // Reset form on successful registration
+      refVForm.value?.reset()
+      formData.value = { ...formDataDefault }
+
+      // Don't redirect - just show success message
+      // The success message will be shown in the template
+    }
+  } catch (err) {
+    console.error('Unexpected error during registration:', err)
+  }
+}
+
+// Trigger Validators
+const onFormSubmit = () => {
+  refVForm.value?.validate().then(({ valid }) => {
+    if (valid) {
+      onSubmit()
+    }
+  })
+}
+
+// Clear messages when form is interacted with
+const clearMessages = () => {
+  errorMessage.value = ''
+  successMessage.value = ''
 }
 </script>
 
 <template>
   <v-form @submit.prevent="handleSubmit" fast-fail>
+  <v-form @submit.prevent="onFormSubmit" ref="refVForm" fast-fail @input="clearMessages">
     <v-row dense>
       <v-col cols="12" sm="6">
         <v-text-field
@@ -168,6 +229,8 @@ const handleSubmit = async () => {
           type="text"
           required
           @input="clearMessages"
+          :rules="[requiredValidator]"
+          @focus="clearMessages"
         />
       </v-col>
       <v-col cols="12" sm="6">
@@ -177,6 +240,9 @@ const handleSubmit = async () => {
           type="text"
           required
           @input="clearMessages"
+
+          :rules="[requiredValidator]"
+          @focus="clearMessages"
         />
       </v-col>
       <v-col cols="12">
@@ -197,6 +263,8 @@ const handleSubmit = async () => {
           prepend-inner-icon="mdi-account-outline"
           required
           @input="clearMessages"
+          :rules="[integerValidator]"
+          @focus="clearMessages"
         />
       </v-col>
       <v-col cols="12">
@@ -207,6 +275,8 @@ const handleSubmit = async () => {
           prepend-inner-icon="mdi-email-outline"
           required
           @input="clearMessages"
+          :rules="[emailValidator]"
+          @focus="clearMessages"
         />
       </v-col>
       <v-col cols="12">
@@ -219,6 +289,8 @@ const handleSubmit = async () => {
           prepend-inner-icon="mdi-lock-outline"
           required
           @input="clearMessages"
+          :rules="[passwordValidator]"
+          @focus="clearMessages"
         />
       </v-col>
       <v-col cols="12">
@@ -231,6 +303,11 @@ const handleSubmit = async () => {
           prepend-inner-icon="mdi-lock-outline"
           required
           @input="clearMessages"
+          :rules="[
+            requiredValidator,
+            confirmedValidator(formData.password, formData.password_confirmation),
+          ]"
+          @focus="clearMessages"
         />
       </v-col>
       <v-col cols="12">
@@ -244,31 +321,41 @@ const handleSubmit = async () => {
           item-title="title"
           required
           @update:model-value="clearMessages"
+          :rules="[requiredValidator]"
+          @focus="clearMessages"
         />
       </v-col>
     </v-row>
 
-    <!-- Messages -->
+    <!-- Success Message -->
     <v-alert
-      v-if="state.errorMessage"
-      type="error"
-      density="compact"
-      class="mb-4"
-      closable
-      @click:close="state.errorMessage = ''"
-    >
-      {{ state.errorMessage }}
-    </v-alert>
-
-    <v-alert
-      v-if="state.successMessage"
+      v-if="successMessage"
       type="success"
       density="compact"
       class="mb-4"
       closable
-      @click:close="state.successMessage = ''"
+      @click:close="successMessage = ''"
     >
-      {{ state.successMessage }}
+      <div class="d-flex align-center">
+        <v-icon icon="mdi-check-circle" class="mr-2" />
+        <span>{{ successMessage }}</span>
+      </div>
+      <div class="mt-2 text-caption">You can now sign in with your credentials.</div>
+    </v-alert>
+
+    <!-- Error Message -->
+    <v-alert
+      v-if="errorMessage"
+      type="error"
+      density="compact"
+      class="mb-4"
+      closable
+      @click:close="errorMessage = ''"
+    >
+      <div class="d-flex align-center">
+        <v-icon icon="mdi-alert-circle" class="mr-2" />
+        <span>{{ errorMessage }}</span>
+      </div>
     </v-alert>
 
     <v-btn
@@ -276,13 +363,22 @@ const handleSubmit = async () => {
       type="submit"
       color="blue-darken-2"
       block
-      :loading="state.isLoading"
-      :disabled="state.isLoading"
+      :loading="isLoading"
+      :disabled="isLoading"
+      size="large"
     >
       <template v-slot:loader>
         <v-progress-circular indeterminate size="20" width="2" />
       </template>
-      {{ state.isLoading ? 'Creating Account...' : 'Sign Up' }}
+      {{ isLoading ? 'Creating Account...' : 'Sign Up' }}
     </v-btn>
+
+    <!-- Additional info after successful registration -->
+    <v-alert v-if="successMessage" type="info" density="compact" class="mt-4">
+      <div class="d-flex align-center">
+        <v-icon icon="mdi-information" class="mr-2" />
+        <span>Check your email for verification instructions.</span>
+      </div>
+    </v-alert>
   </v-form>
 </template>

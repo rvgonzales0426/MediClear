@@ -4,6 +4,8 @@ import { supabase } from '../../supabase.js'
 
 const props = defineProps(['isDrawerOpen'])
 const emit = defineEmits(['update:isDrawerOpen'])
+const authStore = useAuthStore()
+const router = useRouter()
 
 const drawer = computed({
   get: () => props.isDrawerOpen,
@@ -28,6 +30,14 @@ const userInitials = computed(() => {
     .join('')
     .toUpperCase()
 })
+const assignedRoutes = ref(null)
+const isLoading = ref(false)
+
+// Helper function to combine firstname and lastname
+const getFullName = (firstname, lastname) => {
+  if (!firstname && !lastname) return ''
+  return `${firstname || ''} ${lastname || ''}`.trim()
+}
 
 const handleSignOut = async () => {
   try {
@@ -35,6 +45,8 @@ const handleSignOut = async () => {
     localStorage.removeItem('user')
     localStorage.removeItem('session')
     window.location.href = '/login'
+    await authStore.signOutUser() // Use auth store logout method
+    router.replace('/login')
   } catch (error) {
     console.error('Error signing out:', error)
   }
@@ -56,8 +68,8 @@ const routes = [
         <div>
           <h3 class="text-h6">MediClear</h3>
           <p class="text-caption">AHDMS</p>
-        </div></v-col
-      >
+        </div>
+      </v-col>
     </v-row>
 
     <v-divider></v-divider>
@@ -84,6 +96,25 @@ const routes = [
         <div class="text-start">
           <p class="font-weight-bold">{{ user?.full_name || 'User' }}</p>
           <span class="text-caption text-capitalize">{{ user?.role || 'No Role' }}</span>
+    <v-row class="position-fixed bottom-row" v-if="authStore.userData">
+      <v-divider></v-divider>
+      <v-col cols="12" class="d-flex justify-center ga-2">
+        <v-avatar color="blue-lighten-2">
+          <span class="text-white text-h5">{{
+            getAvatarText(getFullName(authStore.userData?.firstname, authStore.userData?.lastname))
+          }}</span>
+        </v-avatar>
+        <div class="text-start">
+          <p class="font-weight-bold">
+            {{
+              getFullName(authStore.userData?.firstname, authStore.userData?.lastname) ||
+              authStore.userData?.email ||
+              'User'
+            }}
+          </p>
+          <span class="text-caption text-capitalize">{{
+            authStore.userData?.role || 'No Role'
+          }}</span>
         </div>
       </v-col>
       <v-col cols="12" lg="6" class="mx-auto">
