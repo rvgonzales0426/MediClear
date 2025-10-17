@@ -1,21 +1,17 @@
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
 import { useAuthStore } from '@/stores/auth.js'
 import { emailValidator, passwordValidator } from '@/utils/validators.js'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { signIn, isLoading, errorMessage, successMessage, init } = useAuth()
-
-// Initialize auth on component mount
-onMounted(() => {
-  init()
-})
 
 const state = reactive({
   isPasswordVisible: false,
+  isLoading: false,
+  errorMessage: '',
+  successMessage: '',
 })
 
 const formDataDefault = {
@@ -31,33 +27,31 @@ const refVForm = ref()
 
 const onSubmit = async () => {
   try {
-    // Clear previous messages
-    errorMessage.value = ''
-    successMessage.value = ''
+    state.isLoading = true
+    state.errorMessage = ''
+    state.successMessage = ''
 
-    // Call signIn with email and password
-    const { data, error } = await signIn(formData.value.email, formData.value.password)
+    // Use store's login method
+    const { data, error } = await authStore.loginUser(formData.value.email, formData.value.password)
 
     if (error) {
-      console.error('Sign in error:', error)
+      state.errorMessage = error.message || 'Login failed'
       return
     }
 
     if (data?.user) {
-      console.log('Login successful:', data.user)
-
-      // Update auth store if you're using it
-      if (authStore && authStore.getUserInformation) {
-        await authStore.getUserInformation()
-      }
-
+      state.successMessage = 'Login successful!'
       refVForm.value?.reset()
 
-      // Redirect based on user role
-      await redirectBasedOnRole(data.user.role)
+      // Redirect based on user role from store
+      const role = authStore.userData?.role
+      await redirectBasedOnRole(role)
     }
   } catch (err) {
+    state.errorMessage = err.message || 'An error occurred'
     console.error('Login error:', err)
+  } finally {
+    state.isLoading = false
   }
 }
 
@@ -72,8 +66,6 @@ const redirectBasedOnRole = async (role) => {
   }
 
   const targetRoute = routes[role] || '/dashboard'
-
-  console.log(`Redirecting ${role} to: ${targetRoute}`)
   await router.replace(targetRoute)
 }
 
@@ -83,16 +75,10 @@ const onFormSubmit = () => {
     if (valid) onSubmit()
   })
 }
-
-// Clear messages when form is interacted with
-const clearMessages = () => {
-  errorMessage.value = ''
-  successMessage.value = ''
-}
 </script>
 
 <template>
-  <v-form fast-fail @submit.prevent="onFormSubmit" ref="refVForm" @input="clearMessages">
+  <v-form fast-fail @submit.prevent="onFormSubmit" ref="refVForm">
     <v-row dense>
       <v-col cols="12">
         <v-text-field
@@ -103,7 +89,6 @@ const clearMessages = () => {
           placeholder="Enter your registered email"
           :rules="[emailValidator]"
           autocomplete="email"
-          @focus="clearMessages"
         />
       </v-col>
 
@@ -118,48 +103,40 @@ const clearMessages = () => {
           placeholder="Enter your password"
           :rules="[passwordValidator]"
           autocomplete="current-password"
-          @focus="clearMessages"
         />
       </v-col>
     </v-row>
 
     <!-- Message Alert -->
     <v-alert
-      v-if="errorMessage"
+      v-if="state.errorMessage"
       type="error"
       density="compact"
       class="mb-4"
       closable
-      @click:close="errorMessage = ''"
+      @click:close="state.errorMessage = ''"
     >
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-alert-circle" class="mr-2" />
-        <span>{{ errorMessage }}</span>
-      </div>
+      {{ state.errorMessage }}
     </v-alert>
 
     <v-alert
-      v-if="successMessage"
+      v-if="state.successMessage"
       type="success"
       density="compact"
       class="mb-4"
       closable
-      @click:close="successMessage = ''"
+      @click:close="state.successMessage = ''"
     >
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-check-circle" class="mr-2" />
-        <span>{{ successMessage }}</span>
-      </div>
+      {{ state.successMessage }}
     </v-alert>
 
     <v-btn
       type="submit"
       color="blue-darken-2"
       block
-      :loading="isLoading"
-      :disabled="isLoading"
+      :loading="state.isLoading"
+      :disabled="state.isLoading"
       class="mt-2"
-      size="large"
     >
       <template v-slot:loader>
         <v-progress-circular indeterminate size="20" width="2" />

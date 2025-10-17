@@ -1,9 +1,12 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
-import { supabase } from '../../supabase.js'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.js'
+import { getAvatarText } from '@/utils/helpers.js'
 
 const props = defineProps(['isDrawerOpen'])
 const emit = defineEmits(['update:isDrawerOpen'])
+
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -12,59 +15,64 @@ const drawer = computed({
   set: (newVal) => emit('update:isDrawerOpen', newVal),
 })
 
-const user = ref(null)
-
-onMounted(() => {
-  const userData = localStorage.getItem('user')
-  if (userData) {
-    user.value = JSON.parse(userData)
-  }
-})
-
-// Get user initials from full name
-const userInitials = computed(() => {
-  if (!user.value?.full_name) return 'U'
-  return user.value.full_name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-})
 const assignedRoutes = ref(null)
 const isLoading = ref(false)
 
-// Helper function to combine firstname and lastname
-const getFullName = (firstname, lastname) => {
-  if (!firstname && !lastname) return ''
-  return `${firstname || ''} ${lastname || ''}`.trim()
-}
+// Computed properties for user display
+const userFullName = computed(() => {
+  if (!authStore.userData) return 'User'
+  const firstName = authStore.userData.firstname || authStore.userData.first_name || ''
+  const lastName = authStore.userData.lastname || authStore.userData.last_name || ''
+  return `${firstName} ${lastName}`.trim() || authStore.userData.email || 'User'
+})
+
+const userInitials = computed(() => {
+  if (!authStore.userData) return 'U'
+  const firstName = authStore.userData.firstname || authStore.userData.first_name || ''
+  const lastName = authStore.userData.lastname || authStore.userData.last_name || ''
+  const fullName = `${firstName} ${lastName}`.trim()
+  return fullName ? getAvatarText(fullName) : getAvatarText(authStore.userData.email || 'User')
+})
 
 const handleSignOut = async () => {
+  isLoading.value = true
   try {
-    await supabase.auth.signOut()
-    localStorage.removeItem('user')
-    localStorage.removeItem('session')
-    window.location.href = '/login'
-    await authStore.signOutUser() // Use auth store logout method
+    await authStore.signOutUser()
     router.replace('/login')
   } catch (error) {
     console.error('Error signing out:', error)
+  } finally {
+    isLoading.value = false
   }
 }
 
-const routes = [
-  ['Dashboard', 'mdi-view-dashboard-outline', '/nurse-dashboard'],
-  ['Patients', 'mdi-account-multiple-outline', '/patients'],
-  ['Discharge Workflow', 'mdi-file-document-outline', '/workflow'],
+const routes = computed(() => [
+  [
+    'Dashboard',
+    'mdi-view-dashboard-outline',
+    assignedRoutes.value, // Will be set based on role
+  ],
+  ['Patients', 'mdi-account-multiple-outline', '/patient-record'],
+  ['Discharge Workflow', 'mdi-file-document-outline', '/work-flow'],
   ['Reports', 'mdi-chart-box-outline', '/reports'],
-]
+])
+
+onMounted(async () => {
+  await authStore.getUserInformation()
+
+  if (authStore.userData?.role === 'nurse') {
+    assignedRoutes.value = '/nurse-dashboard'
+  } else if (authStore.userData?.role === 'doctor') {
+    assignedRoutes.value = '/doctor-dashboard'
+  }
+})
 </script>
 
 <template>
   <v-navigation-drawer v-model="drawer">
     <v-row>
       <v-col cols="6" class="d-flex ga-2 ml-4 my-2">
-        <v-img width="50" src="/public/images/logo.png" rounded> </v-img>
+        <v-img width="50" src="/public/images/logo.png" rounded></v-img>
         <div>
           <h3 class="text-h6">MediClear</h3>
           <p class="text-caption">AHDMS</p>
@@ -76,42 +84,25 @@ const routes = [
 
     <v-list>
       <v-list-item
-        v-for="([title, icon, routes], i) in routes"
+        v-for="([title, icon, route], i) in routes"
         :key="i"
         :prepend-icon="icon"
         :title="title"
         :value="title"
-        :to="routes"
+        :to="route"
         ripple
         color="blue-darken-2"
       ></v-list-item>
     </v-list>
 
-    <v-row class="position-fixed bottom-row">
+    <v-row class="position-fixed bottom-row" v-if="authStore.userData">
       <v-divider></v-divider>
       <v-col cols="12" class="d-flex justify-center ga-2">
         <v-avatar color="blue-lighten-2">
           <span class="text-white text-h5">{{ userInitials }}</span>
         </v-avatar>
         <div class="text-start">
-          <p class="font-weight-bold">{{ user?.full_name || 'User' }}</p>
-          <span class="text-caption text-capitalize">{{ user?.role || 'No Role' }}</span>
-    <v-row class="position-fixed bottom-row" v-if="authStore.userData">
-      <v-divider></v-divider>
-      <v-col cols="12" class="d-flex justify-center ga-2">
-        <v-avatar color="blue-lighten-2">
-          <span class="text-white text-h5">{{
-            getAvatarText(getFullName(authStore.userData?.firstname, authStore.userData?.lastname))
-          }}</span>
-        </v-avatar>
-        <div class="text-start">
-          <p class="font-weight-bold">
-            {{
-              getFullName(authStore.userData?.firstname, authStore.userData?.lastname) ||
-              authStore.userData?.email ||
-              'User'
-            }}
-          </p>
+          <p class="font-weight-bold">{{ userFullName }}</p>
           <span class="text-caption text-capitalize">{{
             authStore.userData?.role || 'No Role'
           }}</span>
@@ -123,9 +114,11 @@ const routes = [
           color="red"
           variant="text"
           prepend-icon="mdi-logout"
+          :loading="isLoading"
           @click="handleSignOut"
-          >Sign out</v-btn
         >
+          Sign out
+        </v-btn>
       </v-col>
     </v-row>
   </v-navigation-drawer>

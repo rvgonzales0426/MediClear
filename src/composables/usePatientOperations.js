@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { supabase } from '@/supabase'
+import { supabase } from '@/composables/useSupabase.js'
 
 export const usePatientOperations = () => {
   const loading = ref(false)

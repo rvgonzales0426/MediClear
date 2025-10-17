@@ -1,9 +1,13 @@
 // stores/auth.js
 import { defineStore } from 'pinia'
 import { supabase } from '@/composables/useSupabase.js'
+import { useAuth } from '@/composables/useAuth'
 import { ref } from 'vue'
 
 export const useAuthStore = defineStore('auth', () => {
+  // Get auth operations from composable
+  const { signIn, signUp, signOut: authSignOut, getCurrentUser } = useAuth()
+
   const userData = ref(null)
   const userSession = ref(null)
 
@@ -98,10 +102,10 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Signout user
+  // Signout user - uses composable
   async function signOutUser() {
     try {
-      const { error } = await supabase.auth.signOut()
+      const { error } = await authSignOut() // Use composable
       if (error) throw error
       userData.value = null
       userSession.value = null
@@ -112,11 +116,47 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Login user - uses composable and updates store
+  async function loginUser(email, password) {
+    try {
+      const { data, error } = await signIn(email, password)
+      if (error) throw error
+
+      // Update store state after successful login
+      await getUserInformation()
+      return { data, error: null }
+    } catch (error) {
+      console.error('Login error:', error)
+      return { data: null, error }
+    }
+  }
+
+  // Register user - uses composable and updates store
+  async function registerUser(email, password, metadata) {
+    try {
+      const { data, error } = await signUp(email, password, metadata)
+      if (error) throw error
+
+      // Update store state after successful registration
+      if (data?.user) {
+        await getUserInformation()
+      }
+      return { data, error: null }
+    } catch (error) {
+      console.error('Register error:', error)
+      return { data: null, error }
+    }
+  }
+
   return {
-    getUserInformation,
-    signOutUser,
-    listenToAuthChanges,
+    // State
     userData,
     userSession,
+    // Actions
+    getUserInformation,
+    loginUser,
+    registerUser,
+    signOutUser,
+    listenToAuthChanges,
   }
 })
