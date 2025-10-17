@@ -35,7 +35,7 @@ const routes = computed(() => [
   [
     'Dashboard',
     'mdi-view-dashboard-outline',
-    assignedRoutes.value, // Now this will update when assignedRoutes changes
+    assignedRoutes.value, // update when assignedRoutes changes
   ],
   ['Patients', 'mdi-account-multiple-outline', '/patient-record'],
   ['Discharge Workflow', 'mdi-file-document-outline', '/work-flow'],
@@ -45,6 +45,7 @@ const routes = computed(() => [
 onMounted(async () => {
   await authStore.getUserInformation() // get user info from store
 
+  //check roles for routes assignment
   if (authStore.userData?.role === 'nurse') {
     assignedRoutes.value = '/nurse-dashboard'
   } else if (authStore.userData?.role === 'doctor') {
