@@ -42,7 +42,11 @@ export const usePatientStore = defineStore('patient', () => {
 
   //Update Patient
   const updatePatient = async (formData) => {
-    return await supabase.from('patients').update(formData).eq('id', formData.id).select()
+    return await supabase
+      .from('patients')
+      .update(formData)
+      .eq('patient_id', formData.patient_id)
+      .select()
   }
 
   const deletePatient = async (patientId) => {

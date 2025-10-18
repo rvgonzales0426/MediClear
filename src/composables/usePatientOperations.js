@@ -50,7 +50,7 @@ export const usePatientOperations = (props, emits) => {
     }
 
     const { data, error } = isUpdate.value
-      ? await patientStore.updatePatient(submissionData.id, submissionData)
+      ? await patientStore.updatePatient(submissionData)
       : await patientStore.addPatient(submissionData)
 
     if (error) {
@@ -61,7 +61,10 @@ export const usePatientOperations = (props, emits) => {
       formAction.value.formProccess = false
       return
     } else if (data) {
-      toast.success('Successfully submitted patient data.', { position: 'top-center' })
+      toast.success(
+        isUpdate.value ? 'Successfully updated patient data.' : 'Successfully added patient data.',
+        { position: 'top-center' },
+      )
       formAction.value.formProccess = false
       await patientStore.fetchPatients()
       onFormReset()

@@ -2,9 +2,12 @@
 import { ref, onMounted } from 'vue'
 import { usePatientStore } from '@/stores/patient'
 import PaginationComponent from '../PaginationComponent.vue'
+import PatientDialog from '@/views/system/partials/PatientDialog.vue'
 import dayjs from 'dayjs'
 
 const patientStore = usePatientStore()
+const patientData = ref(null)
+const isDialogVisible = ref(false)
 
 const statusColor = {
   'Discharge Requested': 'orange',
@@ -16,6 +19,11 @@ const statusColor = {
 //Sample PageLink
 const totalPage = ref(3)
 const currentPage = ref(1)
+
+const onUpdate = (patient) => {
+  patientData.value = patient
+  isDialogVisible.value = true
+}
 
 onMounted(() => {
   patientStore.fetchPatients()
@@ -110,7 +118,9 @@ onMounted(() => {
                 <td>
                   <div class="d-flex align-center ga-2">
                     <v-btn size="small"><v-icon>mdi-eye-outline</v-icon>View</v-btn>
-                    <v-btn size="small"><v-icon>mdi-pencil</v-icon>Edit</v-btn>
+                    <v-btn size="small" @click="onUpdate(patient)"
+                      ><v-icon>mdi-pencil</v-icon>Edit</v-btn
+                    >
                   </div>
                 </td>
               </tr>
@@ -120,6 +130,6 @@ onMounted(() => {
       </v-card>
     </v-col>
   </v-row>
-
+  <PatientDialog v-model:isDialogVisible="isDialogVisible" :patientData="patientData" />
   <PaginationComponent v-model="currentPage" :totalPage="totalPage" />
 </template>
