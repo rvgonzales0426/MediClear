@@ -1,7 +1,17 @@
 <script setup>
 import { usePatientOperations } from '@/composables/usePatientOperations'
+import { requiredValidator } from '@/utils/validators'
 
-const props = defineProps(['patientData', 'isDialogVisible'])
+const props = defineProps({
+  isDialogVisible: {
+    type: Boolean,
+    default: false,
+  },
+  patientData: {
+    type: Object,
+    default: null,
+  },
+})
 const emits = defineEmits(['update:isDialogVisible'])
 
 const { isUpdate, modal, formData, refVForm, isLoading, onFormSubmit } = usePatientOperations(
@@ -33,18 +43,33 @@ const patientStatus = [
   <v-dialog v-model="modal" persistent width="800">
     <v-card :title="isUpdate ? 'Update Patient' : 'Add Patient'">
       <v-card-text>
-        <v-form fast-fail :ref="refVForm" @submit.prevent="onFormSubmit">
+        <v-form fast-fail ref="refVForm" @submit.prevent="onFormSubmit">
           <v-row>
             <v-col cols="12">
-              <v-text-field label="Case Number" type="number" v-model="formData.case_number" />
+              <v-text-field
+                label="Case Number"
+                type="number"
+                v-model="formData.case_number"
+                :rules="[requiredValidator]"
+              />
             </v-col>
 
             <v-col cols="12">
-              <v-text-field label="Patient Name" type="text" v-model="formData.patient_name" />
+              <v-text-field
+                label="Patient Name"
+                type="text"
+                v-model="formData.patient_name"
+                :rules="[requiredValidator]"
+              />
             </v-col>
 
             <v-col cols="6">
-              <v-text-field label="Age/Gender" type="text" v-model="formData.age_gender" />
+              <v-text-field
+                label="Age/Gender"
+                type="text"
+                v-model="formData.age_gender"
+                :rules="[requiredValidator]"
+              />
             </v-col>
 
             <v-col cols="6 ">
@@ -54,6 +79,7 @@ const patientStatus = [
                 :items="patientStatus"
                 :tile="patientStatus.title"
                 :value="patientStatus.value"
+                :rules="[requiredValidator]"
               ></v-select>
             </v-col>
 
@@ -61,7 +87,8 @@ const patientStatus = [
               <v-text-field
                 label="Attending Physician"
                 type="text"
-                v-model="formData.attending_phyisician"
+                v-model="formData.attending_physician"
+                :rules="[requiredValidator]"
               />
             </v-col>
 
@@ -70,19 +97,20 @@ const patientStatus = [
                 label="Addmission Date"
                 format="yyyy/MM/dd"
                 v-model="formData.addmission_date"
+                :rules="[requiredValidator]"
               />
             </v-col>
-
-            <v-btn
-              block
-              color="blue-darken-2"
-              type="submit"
-              :loading="isLoading"
-              :disabled="isLoading"
-              ripple
-              >{{ isUpdate ? 'Update Patient' : 'Add Patient' }}</v-btn
-            >
           </v-row>
+
+          <v-btn
+            block
+            color="blue-darken-2"
+            type="submit"
+            :loading="isLoading"
+            :disabled="isLoading"
+            ripple
+            >{{ isUpdate ? 'Update Patient' : 'Add Patient' }}</v-btn
+          >
         </v-form>
       </v-card-text>
       <v-card-actions>

@@ -17,11 +17,10 @@ export const usePatientOperations = (props, emits) => {
   const formDataDefault = {
     case_number: '',
     patient_name: '',
-    date_of_birth: null,
-    age_gender: '',
+    age_gender: null,
     addmission_date: null,
-    status: null,
-    attending_phyisician: '',
+    status: 'Admitted',
+    attending_physician: '',
   }
 
   const formData = ref({
@@ -40,37 +39,43 @@ export const usePatientOperations = (props, emits) => {
   const onSubmit = async () => {
     isLoading.value = true
 
-    try {
-      // Format the data before submission
-      const submissionData = {
-        ...formData.value,
-        date_of_birth: formatDateForSubmission(formData.value.date_of_birth),
-        addmission_date: formatDateForSubmission(formData.value.addmission_date),
-      }
+    console.log('Submitting form data:', formData.value)
 
-      if (isUpdate.value) {
-        await patientStore.updatePatient(submissionData.id, submissionData)
-      } else {
-        await patientStore.addPatient(submissionData)
-      }
+    // Format the data before submission
+    const submissionData = {
+      ...formData.value,
+      addmission_date: formatDateForSubmission(formData.value.addmission_date),
+    }
 
-      await patientStore.fetchPatients()
-      refVForm.value?.reset()
-      modal.value = false
-    } catch (error) {
-      console.log(error)
-    } finally {
+    const { data, error } = isUpdate.value
+      ? await patientStore.updatePatient(submissionData.id, submissionData)
+      : await patientStore.addPatient(submissionData)
+
+    if (error) {
+      console.error('Error submitting patient data:', error.message)
+      // Handle error (e.g., show notification to user)
       isLoading.value = false
+      return
+    } else if (data) {
+      await patientStore.fetchPatients()
+      onFormReset()
+      modal.value = false
     }
   }
 
   //Trigger Validators
-  const onFormSubmit = () => {
-    refVForm.value?.validate().then(({ valid }) => {
-      if (valid) onSubmit()
-    })
+  const onFormSubmit = async () => {
+    const form = refVForm.value
+    const { valid: isValid } = await form?.validate()
+    if (isValid) onSubmit()
   }
 
+  const onFormReset = () => {
+    const form = refVForm.value
+    if (form) form.reset()
+    formData.value = { ...formDataDefault }
+    modal.value = false
+  }
   return {
     modal,
     isLoading,
