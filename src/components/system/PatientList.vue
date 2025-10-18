@@ -1,7 +1,10 @@
 <script setup>
-import { ref } from 'vue'
-import { patientRecords } from './PatientMockData'
+import { ref, onMounted } from 'vue'
+import { usePatientStore } from '@/stores/patient'
 import PaginationComponent from '../PaginationComponent.vue'
+import dayjs from 'dayjs'
+
+const patientStore = usePatientStore()
 
 const statusColor = {
   'Discharge Requested': 'orange',
@@ -13,6 +16,10 @@ const statusColor = {
 //Sample PageLink
 const totalPage = ref(3)
 const currentPage = ref(1)
+
+onMounted(() => {
+  patientStore.fetchPatients()
+})
 </script>
 
 <template>
@@ -83,12 +90,12 @@ const currentPage = ref(1)
               </tr>
             </thead>
             <tbody>
-              <tr v-for="patient in patientRecords" :key="patient.caseNumber">
-                <td>{{ patient.caseNumber }}</td>
-                <td>{{ patient.patientName }}</td>
-                <td>{{ patient.ageGender }}</td>
+              <tr v-for="patient in patientStore.patients" :key="patient.id">
+                <td>{{ patient.case_number }}</td>
+                <td>{{ patient.patient_name }}</td>
+                <td>{{ patient.age_gender }}</td>
                 <td>{{ patient.ward }}</td>
-                <td>{{ patient.admissionDate }}</td>
+                <td>{{ dayjs(patient.admission_date).format('YYYY-MMM-DD') }}</td>
                 <td>
                   <v-chip
                     :color="statusColor[patient.status] || 'grey'"
@@ -99,7 +106,7 @@ const currentPage = ref(1)
                     {{ patient.status }}
                   </v-chip>
                 </td>
-                <td>{{ patient.attendingPhysician }}</td>
+                <td>{{ patient.attending_physician }}</td>
                 <td>
                   <div class="d-flex align-center ga-2">
                     <v-btn size="small"><v-icon>mdi-eye-outline</v-icon>View</v-btn>

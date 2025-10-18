@@ -1,4 +1,5 @@
 <script setup>
+import dayjs from 'dayjs'
 defineProps({
   patients: {
     type: Array,
@@ -39,7 +40,7 @@ const statusColors = {
       <!-- Patient rows -->
       <tr v-else v-for="patient in patients" :key="patient.id">
         <td class="py-3">{{ patient.patient_name }}</td>
-        <td class="py-3">{{ patient.addmission_date }}</td>
+        <td class="py-3">{{ dayjs(patient.admission_date).format('YYYY-MMM-DD') }}</td>
         <td class="py-3">
           <v-chip
             :color="statusColors[patient.status]"

@@ -14,8 +14,10 @@ const props = defineProps({
 })
 const emits = defineEmits(['update:isDialogVisible'])
 
-const { formAction, isUpdate, modal, formData, refVForm, isLoading, onFormSubmit } =
-  usePatientOperations(props, emits)
+const { formAction, isUpdate, modal, formData, refVForm, onFormSubmit } = usePatientOperations(
+  props,
+  emits,
+)
 
 const patientStatus = [
   {

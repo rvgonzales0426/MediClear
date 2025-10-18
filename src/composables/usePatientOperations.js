@@ -58,12 +58,10 @@ export const usePatientOperations = (props, emits) => {
       // Handle error (e.g., show notification to user)
 
       toast.error(error.message, { position: 'top-center' })
-      formAction.value.formErrorMessage = error.message
       formAction.value.formProccess = false
       return
     } else if (data) {
       toast.success('Successfully submitted patient data.', { position: 'top-center' })
-      formAction.value.formSuccessMessage = 'Successfully submitted patient data.'
       formAction.value.formProccess = false
       await patientStore.fetchPatients()
       onFormReset()
@@ -78,10 +76,12 @@ export const usePatientOperations = (props, emits) => {
     if (isValid) onSubmit()
   }
 
+  // Reset Form
   const onFormReset = () => {
     const form = refVForm.value
     if (form) form.reset()
     formData.value = { ...formDataDefault }
+    formAction.value = { ...formActionDefault }
     modal.value = false
   }
   return {
