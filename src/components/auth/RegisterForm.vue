@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive } from 'vue'
-import { supabase } from '../../supabase.js'
+import { supabase } from '@/composables/useSupabase'
 import { useRouter } from 'vue-router'
 import {
   emailValidator,
@@ -78,14 +78,12 @@ const onFormSubmit = () => {
 
 <template>
   <v-form @submit.prevent="onFormSubmit" ref="refVForm" fast-fail>
-  <v-form @submit.prevent="onFormSubmit" ref="refVForm" fast-fail>
     <v-row dense>
       <v-col cols="12" sm="6">
         <v-text-field
           v-model="formData.first_name"
           label="First Name"
           type="text"
-          :rules="[requiredValidator]"
           :rules="[requiredValidator]"
         />
       </v-col>
@@ -94,7 +92,6 @@ const onFormSubmit = () => {
           v-model="formData.last_name"
           label="Last Name"
           type="text"
-          :rules="[requiredValidator]"
           :rules="[requiredValidator]"
         />
       </v-col>
@@ -105,7 +102,6 @@ const onFormSubmit = () => {
           type="tel"
           prepend-inner-icon="mdi-phone-outline"
           :rules="[integerValidator]"
-          :rules="[integerValidator]"
         />
       </v-col>
       <v-col cols="12">
@@ -114,7 +110,6 @@ const onFormSubmit = () => {
           label="Email"
           type="email"
           prepend-inner-icon="mdi-email-outline"
-          :rules="[emailValidator]"
           :rules="[emailValidator]"
         />
       </v-col>
@@ -126,7 +121,6 @@ const onFormSubmit = () => {
           @click:append-inner="state.isPasswordVisible = !state.isPasswordVisible"
           :append-inner-icon="state.isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
           prepend-inner-icon="mdi-lock-outline"
-          :rules="[passwordValidator]"
           :rules="[passwordValidator]"
         />
       </v-col>
@@ -142,10 +136,6 @@ const onFormSubmit = () => {
             requiredValidator,
             confirmedValidator(formData.password_confirmation, formData.password),
           ]"
-          :rules="[
-            requiredValidator,
-            confirmedValidator(formData.password_confirmation, formData.password),
-          ]"
         />
       </v-col>
       <v-col cols="12">
@@ -157,7 +147,6 @@ const onFormSubmit = () => {
           :items="ROLES"
           item-value="value"
           item-title="title"
-          :rules="[requiredValidator]"
           :rules="[requiredValidator]"
         />
       </v-col>

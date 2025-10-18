@@ -1,10 +1,10 @@
 <script setup>
 import { computed, ref } from 'vue'
-import DashboardCard from '@/components/DashboardCard.vue'
 import { patients, dischargingPatients } from '../PatientMockData'
 import TableComponent from '@/components/TableComponent.vue'
 import PatientActionTable from './PatientActionTable.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
+import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 
 const stats = computed(() => {
   return [
@@ -79,10 +79,10 @@ const currentPage = ref(1)
     </v-col>
   </v-row>
 
-  <!-- Card Header -->
+  <!-- Widgets -->
   <v-row>
     <v-col v-for="status in stats" :key="status.id" cols="12" lg="4" md="4">
-      <DashboardCard :status="status" />
+      <DashBoardWidgets :status="status" />
     </v-col>
   </v-row>
 

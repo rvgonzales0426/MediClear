@@ -99,9 +99,7 @@ onMounted(async () => {
       <v-divider></v-divider>
       <v-col cols="12" class="d-flex justify-center ga-2">
         <v-avatar color="blue-lighten-2">
-          <span class="text-white text-h5">{{
-            getAvatarText(authStore.userData?.firstname + ' ' + authStore.userData?.lastname)
-          }}</span>
+          <span class="text-white text-h5">{{ userInitials }}</span>
         </v-avatar>
         <div class="text-start">
           <p class="font-weight-bold">{{ userFullName }}</p>

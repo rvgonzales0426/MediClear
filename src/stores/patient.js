@@ -1,15 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useSupabase } from '@/composables/useSupabase'
-import { usePatientOperations } from '@/composables/usePatientOperations'
+import { supabase } from '@/composables/useSupabase'
 
 export const usePatientStore = defineStore('patient', () => {
-  const { fetchData, updateData, deleteData } = useSupabase()
-  const { addPatient: addPatientOperation } = usePatientOperations()
-
   // State
   const patients = ref([])
-  const loading = ref(false)
   const error = ref(null)
 
   // Computed
@@ -32,99 +27,30 @@ export const usePatientStore = defineStore('patient', () => {
   )
 
   // Actions
-  const fetchPatients = async (options = {}) => {
-    try {
-      loading.value = true
-      error.value = null
+  const fetchPatients = async () => {
+    const { data: patients, error } = await supabase.from('patients').select('*')
 
-      const defaultOptions = {
-        order: { column: 'created_at', ascending: false },
-        ...options,
-      }
+    if (error) console.log(error, 'Error fetching patients')
 
-      const { data, error: fetchError } = await fetchData('patients', defaultOptions)
+    console.log(patients)
 
-      if (fetchError) throw fetchError
-
-      patients.value = data || []
-      return { data, error: null }
-    } catch (err) {
-      error.value = err.message
-      patients.value = []
-      return { data: null, error: err }
-    } finally {
-      loading.value = false
-    }
+    patients.value = patients
   }
 
-  const addPatient = async (patientData) => {
-    try {
-      loading.value = true
-      error.value = null
-
-      const result = await addPatientOperation(patientData)
-
-      if (result.success && result.data) {
-        // Add the new patient to the list (prepend to show at top)
-        patients.value.unshift(result.data[0])
-        return { success: true, data: result.data }
-      }
-
-      error.value = result.error
-      return { success: false, error: result.error }
-    } catch (err) {
-      error.value = err.message
-      return { success: false, error: err.message }
-    } finally {
-      loading.value = false
-    }
+  //Add Patients
+  const addPatient = async (formData) => {
+    return await supabase.from('patients').insert(formData).select()
   }
 
-  const updatePatient = async (patientId, updates) => {
-    try {
-      loading.value = true
-      error.value = null
-
-      const { updateData } = useSupabase()
-      const { data, error: updateError } = await updateData('patients', patientId, updates)
-
-      if (updateError) throw updateError
-
-      // Update local state
-      const index = patients.value.findIndex((p) => p.id === patientId)
-      if (index !== -1 && data?.[0]) {
-        patients.value[index] = data[0]
-      }
-
-      return { success: true, data }
-    } catch (err) {
-      error.value = err.message
-      return { success: false, error: err.message }
-    } finally {
-      loading.value = false
-    }
+  //Update Patient
+  const updatePatient = async (formData) => {
+    return await supabase.from('patients').update(formData).eq('id', formData.id).select()
   }
 
   const deletePatient = async (patientId) => {
-    try {
-      loading.value = true
-      error.value = null
+    const { error } = await supabase.from('patients').delete().eq('id', patientId)
 
-      const { deleteData } = useSupabase()
-      const { error: deleteError } = await deleteData('patients', patientId)
-
-      if (deleteError) throw deleteError
-
-      // Remove from local state
-      patients.value = patients.value.filter((p) => p.id !== patientId)
-
-      return { success: true }
-    } catch (err) {
-      error.value = err.message
-      return { success: false, error: err.message }
-    } finally {
-      loading.value = false
-    }
+    if (error) return
   }
 
   const getPatientById = (patientId) => {
@@ -137,14 +63,12 @@ export const usePatientStore = defineStore('patient', () => {
 
   const resetStore = () => {
     patients.value = []
-    loading.value = false
     error.value = null
   }
 
   return {
     // State
     patients,
-    loading,
     error,
     // Computed
     totalPatients,

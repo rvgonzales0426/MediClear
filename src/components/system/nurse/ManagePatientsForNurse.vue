@@ -1,10 +1,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import DashboardCard from '@/components/DashboardCard.vue'
 import TableComponent from '@/components/TableComponent.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
 import PatientDialog from '@/views/system/partials/PatientDialog.vue'
 import { usePatientStore } from '@/stores/patient'
+import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 
 const patientStore = usePatientStore()
 
@@ -136,7 +136,7 @@ const handlePatientAdded = async (newPatient) => {
   <!-- Card Header -->
   <v-row>
     <v-col v-for="status in stats" :key="status.id" cols="12" lg="3" md="4">
-      <DashboardCard :status="status" />
+      <DashBoardWidgets :status="status" />
     </v-col>
   </v-row>
 
