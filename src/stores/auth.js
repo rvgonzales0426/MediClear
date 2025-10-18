@@ -1,40 +1,3 @@
-<<<<<<< HEAD
-import { defineStore } from 'pinia'
-import { supabase } from '@/supabase'
-import { ref } from 'vue'
-
-export const useAuthStore = defineStore('auth', () => {
-  //LOGGED VALUES/STATES ARE  FOR DEBUGGING ONLY
-  const userData = ref(null)
-  const userSession = ref(null)
-
-  //listerForSessions
-  async function listenToAuthChanges() {
-    supabase.auth.onAuthStateChange((_, session) => {
-      userSession.value = session?.user || null
-    })
-  }
-
-  //Get User Info
-  async function getUserInformation() {
-    const {
-      data: {
-        user: { email, id, user_metadata },
-      },
-    } = await supabase.auth.getUser()
-
-    userData.value = { id, email, ...user_metadata }
-  }
-
-  //Signout user
-  async function signOutUser() {
-    try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      userData.value = null
-      return { error: null }
-    } catch (error) {
-=======
 // stores/auth.js
 import { defineStore } from 'pinia'
 import { supabase } from '@/composables/useSupabase.js'
@@ -149,22 +112,10 @@ export const useAuthStore = defineStore('auth', () => {
       return { error: null }
     } catch (error) {
       console.error('Logout error:', error)
->>>>>>> 96230c5b8ad82662324fa5decc85c53ce01c5ffc
       return { error }
     }
   }
 
-<<<<<<< HEAD
-  return {
-    //Actions
-    // getAuthSession,
-    getUserInformation,
-    signOutUser,
-    listenToAuthChanges,
-    //States
-    userData,
-    userSession,
-=======
   // Login user - uses composable and updates store
   async function loginUser(email, password) {
     try {
@@ -207,6 +158,5 @@ export const useAuthStore = defineStore('auth', () => {
     registerUser,
     signOutUser,
     listenToAuthChanges,
->>>>>>> 96230c5b8ad82662324fa5decc85c53ce01c5ffc
   }
 })
