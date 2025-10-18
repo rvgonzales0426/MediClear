@@ -1,6 +1,8 @@
 import { ref, watch, computed } from 'vue'
 import { usePatientStore } from '@/stores/patient'
 import { formatDateForSubmission } from '@/utils/helpers'
+import { formActionDefault } from './useSupabase'
+import { toast } from 'vue3-toastify'
 
 export const usePatientOperations = (props, emits) => {
   const modal = computed({
@@ -10,7 +12,6 @@ export const usePatientOperations = (props, emits) => {
 
   //Load variables
   const patientStore = usePatientStore()
-  const isLoading = ref(false)
   const isUpdate = ref(false)
   const refVForm = ref()
 
@@ -27,6 +28,9 @@ export const usePatientOperations = (props, emits) => {
     ...formDataDefault,
   })
 
+  const formAction = ref({ ...formActionDefault })
+
+  //E check niya if isa patentdata ang na pass sa props para ma determine kung add or update
   watch(
     () => props?.patientData,
     () => {
@@ -37,9 +41,7 @@ export const usePatientOperations = (props, emits) => {
   )
 
   const onSubmit = async () => {
-    isLoading.value = true
-
-    console.log('Submitting form data:', formData.value)
+    formAction.value.formProccess = true
 
     // Format the data before submission
     const submissionData = {
@@ -54,9 +56,15 @@ export const usePatientOperations = (props, emits) => {
     if (error) {
       console.error('Error submitting patient data:', error.message)
       // Handle error (e.g., show notification to user)
-      isLoading.value = false
+
+      toast.error(error.message, { position: 'top-center' })
+      formAction.value.formErrorMessage = error.message
+      formAction.value.formProccess = false
       return
     } else if (data) {
+      toast.success('Successfully submitted patient data.', { position: 'top-center' })
+      formAction.value.formSuccessMessage = 'Successfully submitted patient data.'
+      formAction.value.formProccess = false
       await patientStore.fetchPatients()
       onFormReset()
       modal.value = false
@@ -78,7 +86,8 @@ export const usePatientOperations = (props, emits) => {
   }
   return {
     modal,
-    isLoading,
+    isUpdate,
+    formAction,
     formData,
     onFormSubmit,
     refVForm,

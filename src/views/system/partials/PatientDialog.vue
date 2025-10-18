@@ -14,10 +14,8 @@ const props = defineProps({
 })
 const emits = defineEmits(['update:isDialogVisible'])
 
-const { isUpdate, modal, formData, refVForm, isLoading, onFormSubmit } = usePatientOperations(
-  props,
-  emits,
-)
+const { formAction, isUpdate, modal, formData, refVForm, isLoading, onFormSubmit } =
+  usePatientOperations(props, emits)
 
 const patientStatus = [
   {
@@ -106,8 +104,8 @@ const patientStatus = [
             block
             color="blue-darken-2"
             type="submit"
-            :loading="isLoading"
-            :disabled="isLoading"
+            :loading="formAction.formProccess"
+            :disabled="formAction.formProccess"
             ripple
             >{{ isUpdate ? 'Update Patient' : 'Add Patient' }}</v-btn
           >

@@ -5,6 +5,10 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
+//Vue Toastify
+import Vue3Toastify from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
+
 // Vuetify
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
@@ -25,6 +29,9 @@ const vuetify = createVuetify({
 
 app.use(createPinia())
 app.use(router)
+app.use(Vue3Toastify, {
+  autoClose: 3000,
+})
 
 app.mount('#app')
 app.use(vuetify)

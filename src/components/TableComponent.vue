@@ -50,7 +50,7 @@ const statusColors = {
             {{ patient.status }}
           </v-chip>
         </td>
-        <td class="py-3">{{ patient.attending_phyisician }}</td>
+        <td class="py-3">{{ patient.attending_physician }}</td>
         <td class="py-3">
           <div class="d-flex align-center ga-2">
             <v-btn
