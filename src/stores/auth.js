@@ -11,7 +11,6 @@ export const useAuthStore = defineStore('auth', () => {
   async function listenToAuthChanges() {
     supabase.auth.onAuthStateChange((_, session) => {
       userSession.value = session?.user || null
-      console.log('Logging current session', userSession.value)
     })
   }
 
@@ -24,7 +23,6 @@ export const useAuthStore = defineStore('auth', () => {
     } = await supabase.auth.getUser()
 
     userData.value = { id, email, ...user_metadata }
-    console.log(userData.value)
   }
 
   //Signout user
@@ -35,7 +33,6 @@ export const useAuthStore = defineStore('auth', () => {
       userData.value = null
       return { error: null }
     } catch (error) {
-      console.error('Logout error:', error)
       return { error }
     }
   }

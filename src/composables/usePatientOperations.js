@@ -1,14 +1,10 @@
 import { ref, watch, computed } from 'vue'
 import { usePatientStore } from '@/stores/patient'
-import { defineProps } from 'vue'
-import { defineEmits } from 'vue'
+import { formatDateForSubmission } from '@/utils/helpers'
 
-export const usePatientOperations = () => {
-  const props = defineProps(['patientData', 'isDialogVisible'])
-  const emits = defineEmits(['update:isDialogVisible'])
-
+export const usePatientOperations = (props, emits) => {
   const modal = computed({
-    get: () => props.isDialogVisible,
+    get: () => props?.isDialogVisible,
     set: (newVal) => emits('update:isDialogVisible', newVal),
   })
 
@@ -24,7 +20,7 @@ export const usePatientOperations = () => {
     date_of_birth: null,
     age_gender: '',
     addmission_date: null,
-    status: 'Active',
+    status: null,
     attending_phyisician: '',
   }
 
@@ -33,20 +29,30 @@ export const usePatientOperations = () => {
   })
 
   watch(
-    () => props.patientData,
+    () => props?.patientData,
     () => {
-      isUpdate.value = props.patientData ? true : false
+      isUpdate.value = props?.patientData ? true : false
       formData.value = isUpdate.value ? { ...props.patientData } : { ...formDataDefault }
     },
+    { immediate: true },
   )
 
-  const onSubmit = async (id) => {
+  const onSubmit = async () => {
     isLoading.value = true
 
     try {
-      isUpdate.value
-        ? await patientStore.updatePatient(id)
-        : await patientStore.addPatient(formData.value)
+      // Format the data before submission
+      const submissionData = {
+        ...formData.value,
+        date_of_birth: formatDateForSubmission(formData.value.date_of_birth),
+        addmission_date: formatDateForSubmission(formData.value.addmission_date),
+      }
+
+      if (isUpdate.value) {
+        await patientStore.updatePatient(submissionData.id, submissionData)
+      } else {
+        await patientStore.addPatient(submissionData)
+      }
 
       await patientStore.fetchPatients()
       refVForm.value?.reset()

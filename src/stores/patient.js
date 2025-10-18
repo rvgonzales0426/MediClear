@@ -28,13 +28,11 @@ export const usePatientStore = defineStore('patient', () => {
 
   // Actions
   const fetchPatients = async () => {
-    const { data: patients, error } = await supabase.from('patients').select('*')
+    const { data, error } = await supabase.from('patients').select('*')
 
     if (error) console.log(error, 'Error fetching patients')
 
-    console.log(patients)
-
-    patients.value = patients
+    patients.value = data
   }
 
   //Add Patients

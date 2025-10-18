@@ -8,13 +8,12 @@ import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 
 const patientStore = usePatientStore()
 
-// Success/Error messages
-const successMessage = ref('')
-
 // Load patients on component mount
 onMounted(() => {
   patientStore.fetchPatients()
 })
+
+console.log(patientStore.patients)
 
 //Load variables
 const stats = computed(() => {
@@ -50,44 +49,11 @@ const stats = computed(() => {
   ]
 })
 
-const columns = [
-  { key: 'patientName', label: 'Patient Name' },
-  {
-    key: 'admissionDate',
-    label: 'Admission Date',
-  },
-
-  {
-    key: 'status',
-    label: 'Status',
-    color: {
-      'Discharge Requested': 'orange',
-      Approved: 'green',
-      Released: undefined,
-      Admitted: 'blue',
-    },
-  },
-  {
-    key: 'attendingPhysician',
-    label: 'Attendting Physician',
-  },
-]
-
 //Sample PageLink
 const totalPage = ref(3)
 const currentPage = ref(1)
 
 const isDialogVisible = ref(false)
-
-// Handle patient added successfully
-const handlePatientAdded = async (newPatient) => {
-  successMessage.value = 'Patient added successfully!'
-
-  // Auto-hide success message after 5 seconds
-  setTimeout(() => {
-    successMessage.value = ''
-  }, 5000)
-}
 </script>
 
 <template>
@@ -109,30 +75,6 @@ const handlePatientAdded = async (newPatient) => {
     </v-col>
   </v-row>
 
-  <!-- Success/Error Messages -->
-  <v-row v-if="successMessage || patientStore.error">
-    <v-col cols="12">
-      <v-alert
-        v-if="successMessage"
-        type="success"
-        variant="tonal"
-        closable
-        @click:close="successMessage = ''"
-      >
-        {{ successMessage }}
-      </v-alert>
-      <v-alert
-        v-if="patientStore.error"
-        type="error"
-        variant="tonal"
-        closable
-        @click:close="patientStore.clearError()"
-      >
-        {{ patientStore.error }}
-      </v-alert>
-    </v-col>
-  </v-row>
-
   <!-- Card Header -->
   <v-row>
     <v-col v-for="status in stats" :key="status.id" cols="12" lg="3" md="4">
@@ -141,19 +83,15 @@ const handlePatientAdded = async (newPatient) => {
   </v-row>
 
   <!-- Table -->
-  <v-row>
+  <v-row v-if="patientStore.patients">
     <v-col cols="12" lg="12">
       <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
-          <TableComponent
-            :columns="columns"
-            :data="patientStore.patients"
-            :loading="patientStore.loading"
-          />
+          <TableComponent :patients="patientStore.patients" />
         </v-card-text>
       </v-card>
     </v-col>
   </v-row>
   <PaginationComponent v-model="currentPage" :totalPage="totalPage" />
-  <PatientDialog v-model:isDialogVisible="isDialogVisible" @patientAdded="handlePatientAdded" />
+  <PatientDialog v-model:isDialogVisible="isDialogVisible" />
 </template>
