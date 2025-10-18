@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import dayjs from 'dayjs'
 defineProps({
   patients: {
@@ -6,6 +8,8 @@ defineProps({
     required: true,
   },
 })
+
+const authStore = useAuthStore()
 
 defineEmits(['view', 'requestDischarge'])
 
@@ -16,6 +20,9 @@ const statusColors = {
   Released: undefined,
   Admitted: 'blue',
 }
+
+// Computed property for user role
+const isNurse = computed(() => authStore.userData?.role === 'nurse')
 </script>
 
 <template>
@@ -64,7 +71,7 @@ const statusColors = {
             </v-btn>
 
             <v-btn
-              v-if="patient.status === 'Admitted'"
+              v-if="isNurse && patient.status === 'Admitted'"
               color="orange"
               size="small"
               variant="flat"

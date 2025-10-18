@@ -1,14 +1,16 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { usePatientStore } from '@/stores/patient'
+import { useAuthStore } from '@/stores/auth'
 import PaginationComponent from '../PaginationComponent.vue'
 import PatientDialog from '@/views/system/partials/PatientDialog.vue'
 import dayjs from 'dayjs'
 
 const patientStore = usePatientStore()
+const authStore = useAuthStore()
 const patientData = ref(null)
 const isDialogVisible = ref(false)
-
+const isNurse = computed(() => authStore.userData?.role === 'nurse')
 const statusColor = {
   'Discharge Requested': 'orange',
   Approved: 'green',
@@ -125,7 +127,7 @@ onMounted(() => {
                 <td>
                   <div class="d-flex align-center ga-2">
                     <v-btn size="small"><v-icon>mdi-eye-outline</v-icon>View</v-btn>
-                    <v-btn size="small" @click="onUpdate(patient)"
+                    <v-btn size="small" @click="onUpdate(patient)" v-if="isNurse"
                       ><v-icon>mdi-pencil</v-icon>Edit</v-btn
                     >
                   </div>

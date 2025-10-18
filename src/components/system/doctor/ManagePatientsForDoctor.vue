@@ -1,10 +1,18 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { patients, dischargingPatients } from '../PatientMockData'
+import { usePatientStore } from '@/stores/patient'
 import TableComponent from '@/components/TableComponent.vue'
 import PatientActionTable from './PatientActionTable.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
+
+const patientStore = usePatientStore()
+
+// Load patients on component mount
+onMounted(() => {
+  patientStore.fetchPatients()
+})
 
 const stats = computed(() => {
   return [
@@ -12,7 +20,7 @@ const stats = computed(() => {
       id: 1,
       title: 'Pending Approvals',
       text: 'Requiring your review',
-      count: patients.filter((p) => p.status === 'Discharge Requested').length,
+      count: patientStore.pendingDischarge,
       color: 'orange',
       icon: 'mdi-clock-time-three-outline',
     },
@@ -21,7 +29,7 @@ const stats = computed(() => {
       id: 2,
       title: 'Released Today',
       text: 'Successfully discharged',
-      count: patients.filter((p) => p.status === 'Approved').length,
+      count: patientStore.releasedPatients,
       color: 'green',
       icon: 'mdi-check-circle-outline',
     },
@@ -29,35 +37,12 @@ const stats = computed(() => {
       id: 3,
       title: "Today's Discharges",
       text: 'Total processed today',
-      count: patients.filter((p) => p.status === 'Admitted').length,
+      count: patientStore.admittedPatients,
       color: 'blue',
       icon: 'mdi-arrow-top-right',
     },
   ]
 })
-
-const columns = [
-  { key: 'patientName', label: 'Patient Name' },
-  {
-    key: 'admissionDate',
-    label: 'Admission Date',
-  },
-
-  {
-    key: 'status',
-    label: 'Status',
-    color: {
-      'Discharge Requested': 'orange',
-      Approved: 'green',
-      Released: undefined,
-      Admitted: 'blue',
-    },
-  },
-  {
-    key: 'attendingPhysician',
-    label: 'Attendting Physician',
-  },
-]
 
 const actionTableColumns = [
   { key: 'patientName', label: 'Patient Name' },
@@ -100,12 +85,12 @@ const currentPage = ref(1)
     </v-col>
   </v-row>
 
-  <!-- Patient Overview -->
-  <v-row>
-    <v-col cols="12" lg="12" md="10">
-      <v-card title="All Patients Overview" subtitle="Current status of all patients in the system">
+  <!-- Table -->
+  <v-row v-if="patientStore.patients">
+    <v-col cols="12" lg="12">
+      <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
-          <TableComponent :columns="columns" :data="patients" :loading="isLoading" />
+          <TableComponent :patients="patientStore.patients" />
         </v-card-text>
       </v-card>
     </v-col>
