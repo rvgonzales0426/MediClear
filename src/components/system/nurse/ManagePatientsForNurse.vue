@@ -1,10 +1,20 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DashboardCard from '@/components/DashboardCard.vue'
-import { patients } from '../PatientMockData'
 import TableComponent from '@/components/TableComponent.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
 import PatientDialog from '@/views/system/partials/PatientDialog.vue'
+import { usePatientStore } from '@/stores/patient'
+
+const patientStore = usePatientStore()
+
+// Success/Error messages
+const successMessage = ref('')
+
+// Load patients on component mount
+onMounted(() => {
+  patientStore.fetchPatients()
+})
 
 //Load variables
 const stats = computed(() => {
@@ -13,28 +23,28 @@ const stats = computed(() => {
       id: 1,
       title: 'Total Patients',
       text: 'Currently assigned',
-      count: patients.length,
+      count: patientStore.totalPatients,
       color: 'blue',
     },
     {
       id: 2,
       title: ' Pending Discharge',
       text: 'Awaiting approval',
-      count: patients.filter((p) => p.status === 'Discharge Requested').length,
+      count: patientStore.pendingDischarge,
       color: 'orange',
     },
     {
       id: 3,
       title: 'Approved',
       text: 'Ready for release',
-      count: patients.filter((p) => p.status === 'Approved').length,
+      count: patientStore.approvedPatients,
       color: 'green',
     },
     {
       id: 4,
       title: 'Released',
       text: 'Completed today',
-      count: patients.filter((p) => p.status === 'Released').length,
+      count: patientStore.releasedPatients,
       color: null,
     },
   ]
@@ -63,14 +73,21 @@ const columns = [
   },
 ]
 
-// Optional: Add loading state if needed
-const isLoading = ref(false)
-
 //Sample PageLink
 const totalPage = ref(3)
 const currentPage = ref(1)
 
 const isDialogVisible = ref(false)
+
+// Handle patient added successfully
+const handlePatientAdded = async (newPatient) => {
+  successMessage.value = 'Patient added successfully!'
+
+  // Auto-hide success message after 5 seconds
+  setTimeout(() => {
+    successMessage.value = ''
+  }, 5000)
+}
 </script>
 
 <template>
@@ -92,6 +109,30 @@ const isDialogVisible = ref(false)
     </v-col>
   </v-row>
 
+  <!-- Success/Error Messages -->
+  <v-row v-if="successMessage || patientStore.error">
+    <v-col cols="12">
+      <v-alert
+        v-if="successMessage"
+        type="success"
+        variant="tonal"
+        closable
+        @click:close="successMessage = ''"
+      >
+        {{ successMessage }}
+      </v-alert>
+      <v-alert
+        v-if="patientStore.error"
+        type="error"
+        variant="tonal"
+        closable
+        @click:close="patientStore.clearError()"
+      >
+        {{ patientStore.error }}
+      </v-alert>
+    </v-col>
+  </v-row>
+
   <!-- Card Header -->
   <v-row>
     <v-col v-for="status in stats" :key="status.id" cols="12" lg="3" md="4">
@@ -104,11 +145,15 @@ const isDialogVisible = ref(false)
     <v-col cols="12" lg="12">
       <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
-          <TableComponent :columns="columns" :data="patients" :loading="isLoading" />
+          <TableComponent
+            :columns="columns"
+            :data="patientStore.patients"
+            :loading="patientStore.loading"
+          />
         </v-card-text>
       </v-card>
     </v-col>
   </v-row>
   <PaginationComponent v-model="currentPage" :totalPage="totalPage" />
-  <PatientDialog v-model:isDialogVisible="isDialogVisible" />
+  <PatientDialog v-model:isDialogVisible="isDialogVisible" @patientAdded="handlePatientAdded" />
 </template>

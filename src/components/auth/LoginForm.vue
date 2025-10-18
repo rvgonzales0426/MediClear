@@ -1,16 +1,12 @@
 <script setup>
 import { ref, reactive } from 'vue'
-import { supabase } from '../../supabase.js'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { emailValidator, passwordValidator } from '@/utils/validators.js'
 
+const router = useRouter()
 const authStore = useAuthStore()
 
-// Reactive state
-const router = useRouter()
-
-// Reactive state
 const state = reactive({
   isPasswordVisible: false,
   isLoading: false,
@@ -30,25 +26,50 @@ const formData = ref({
 const refVForm = ref()
 
 const onSubmit = async () => {
-  state.isLoading = true
+  try {
+    state.isLoading = true
+    state.errorMessage = ''
+    state.successMessage = ''
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: formData.value.email,
-    password: formData.value.password,
-  })
+    // Use store's login method
+    const { data, error } = await authStore.loginUser(formData.value.email, formData.value.password)
 
-  if (error) {
-    state.errorMessage = error.message || 'Error Logging In'
-  } else if (data) {
-    state.successMessage = 'Login Successfully'
+    if (error) {
+      state.errorMessage = error.message || 'Login failed'
+      return
+    }
 
-    await authStore.getUserInformation()
-    refVForm.value?.reset()
-    router.replace(authStore.userData?.role === 'nurse' ? '/nurse-dashboard' : 'doctor-dashboard') //Check role from session
+    if (data?.user) {
+      state.successMessage = 'Login successful!'
+      refVForm.value?.reset()
+
+      // Redirect based on user role from store
+      const role = authStore.userData?.role
+      await redirectBasedOnRole(role)
+    }
+  } catch (err) {
+    state.errorMessage = err.message || 'An error occurred'
+    console.error('Login error:', err)
+  } finally {
+    state.isLoading = false
   }
 }
 
-//Trigger Validators
+// Function to handle role-based redirection
+const redirectBasedOnRole = async (role) => {
+  const routes = {
+    admin: '/admin-dashboard',
+    doctor: '/doctor-dashboard',
+    nurse: '/nurse-dashboard',
+    billing_clerk: '/billing-dashboard',
+    philhealth_officer: '/philhealth-dashboard',
+  }
+
+  const targetRoute = routes[role] || '/dashboard'
+  await router.replace(targetRoute)
+}
+
+// Trigger Validators
 const onFormSubmit = () => {
   refVForm.value?.validate().then(({ valid }) => {
     if (valid) onSubmit()
@@ -66,7 +87,6 @@ const onFormSubmit = () => {
           type="email"
           prepend-inner-icon="mdi-email-outline"
           placeholder="Enter your registered email"
-          :rules="[emailValidator]"
         />
       </v-col>
 
@@ -76,17 +96,16 @@ const onFormSubmit = () => {
           label="Password"
           :type="state.isPasswordVisible ? 'text' : 'password'"
           prepend-inner-icon="mdi-lock-outline"
-          @click:append-inner="state.isPasswordVisible = !state.isPasswordVisible"
-          :append-inner-icon="state.isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
+          :disabled="loading"
+          required
           placeholder="Enter your password"
-          :rules="[passwordValidator]"
         />
       </v-col>
     </v-row>
 
     <!-- Message Alert -->
-    <v-alert v-if="state.errorMessage" :type="message.type" density="compact" class="mb-4">
-      {{ state.errorMessage }}
+    <v-alert v-if="message.text" :type="message.type" density="compact" class="mb-4">
+      {{ message.text }}
     </v-alert>
 
     <v-btn
