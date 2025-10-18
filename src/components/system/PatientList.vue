@@ -98,7 +98,14 @@ onMounted(() => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="patient in patientStore.patients" :key="patient.id">
+              <!-- Loading state -->
+              <tr v-if="!patientStore.patients || patientStore.patients.length === 0">
+                <td colspan="12" class="text-center py-8">
+                  <v-progress-circular indeterminate color="primary" />
+                </td>
+              </tr>
+
+              <tr v-else v-for="patient in patientStore.patients" :key="patient.id">
                 <td>{{ patient.case_number }}</td>
                 <td>{{ patient.patient_name }}</td>
                 <td>{{ patient.age_gender }}</td>

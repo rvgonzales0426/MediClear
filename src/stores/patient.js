@@ -5,7 +5,10 @@ import { supabase } from '@/composables/useSupabase'
 export const usePatientStore = defineStore('patient', () => {
   // State
   const patients = ref([])
-  const error = ref(null)
+
+  const $reset = () => {
+    patients.value = []
+  }
 
   // Computed
   const totalPatients = computed(() => patients.value.length)
@@ -59,19 +62,9 @@ export const usePatientStore = defineStore('patient', () => {
     return patients.value.find((p) => p.id === patientId)
   }
 
-  const clearError = () => {
-    error.value = null
-  }
-
-  const resetStore = () => {
-    patients.value = []
-    error.value = null
-  }
-
   return {
     // State
     patients,
-    error,
     // Computed
     totalPatients,
     pendingDischarge,
@@ -84,7 +77,6 @@ export const usePatientStore = defineStore('patient', () => {
     updatePatient,
     deletePatient,
     getPatientById,
-    clearError,
-    resetStore,
+    $reset,
   }
 })
