@@ -7,6 +7,11 @@ export const useAuthStore = defineStore('auth', () => {
   const userData = ref(null)
   const userSession = ref(null)
 
+  function $reset() {
+    userData.value = null
+    userSession.value = null
+  }
+
   //listerForSessions
   async function listenToAuthChanges() {
     supabase.auth.onAuthStateChange((_, session) => {
@@ -29,9 +34,10 @@ export const useAuthStore = defineStore('auth', () => {
   async function signOutUser() {
     try {
       const { error } = await supabase.auth.signOut()
+
       if (error) throw error
-      userData.value = null
-      return { error: null }
+
+      $reset()
     } catch (error) {
       return { error }
     }
@@ -43,6 +49,7 @@ export const useAuthStore = defineStore('auth', () => {
     getUserInformation,
     signOutUser,
     listenToAuthChanges,
+    $reset,
     //States
     userData,
     userSession,
