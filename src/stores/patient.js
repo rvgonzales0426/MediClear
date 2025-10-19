@@ -1,13 +1,17 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { supabase } from '@/composables/useSupabase'
 
 export const usePatientStore = defineStore('patient', () => {
   // State
   const patients = ref([])
+  const currentPatient = ref(null)
+  const isLoading = ref(false)
 
   const $reset = () => {
     patients.value = []
+    currentPatient.value = null
+    isLoading.value = false
   }
 
   // Computed
@@ -31,11 +35,59 @@ export const usePatientStore = defineStore('patient', () => {
 
   // Actions
   const fetchPatients = async () => {
+    isLoading.value = true
     const { data, error } = await supabase.from('patients').select('*')
 
     if (error) console.log(error, 'Error fetching patients')
 
-    patients.value = data
+    if (data) {
+      patients.value = data
+      isLoading.value = false
+    }
+  }
+
+  // New: Fetch single patient details
+  const fetchPatientById = async (patientId) => {
+    console.log('Fetching patient from database:', patientId)
+    isLoading.value = true
+
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('patient_id', patientId)
+      .single()
+
+    isLoading.value = false
+
+    if (error) {
+      console.log(error, 'Error fetching patient details')
+      currentPatient.value = null // This should trigger reactivity
+      return { data: null, error }
+    } else {
+      console.log('Patient fetched successfully:', data)
+      currentPatient.value = data // This should trigger reactivity
+
+      // Force reactivity update
+      await nextTick()
+
+      return { data, error: null }
+    }
+  }
+  // New: Set current patient from existing patients array
+  const setCurrentPatient = (patientId) => {
+    const patient = patients.value.find((p) => p.patient_id === patientId)
+    if (patient) {
+      currentPatient.value = patient
+      return patient
+    }
+    console.log('Patient not found in store:', patientId) // MediClear pattern: log errors
+    currentPatient.value = null
+    return null
+  }
+
+  // New: Clear current patient
+  const clearCurrentPatient = () => {
+    currentPatient.value = null
   }
 
   //Add Patients
@@ -64,6 +116,7 @@ export const usePatientStore = defineStore('patient', () => {
 
   return {
     // State
+    isLoading,
     patients,
     // Computed
     totalPatients,
@@ -71,8 +124,13 @@ export const usePatientStore = defineStore('patient', () => {
     approvedPatients,
     releasedPatients,
     admittedPatients,
+    currentPatient,
+
     // Actions
     fetchPatients,
+    fetchPatientById,
+    setCurrentPatient,
+    clearCurrentPatient,
     addPatient,
     updatePatient,
     deletePatient,

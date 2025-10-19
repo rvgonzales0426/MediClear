@@ -65,7 +65,7 @@ const isNurse = computed(() => authStore.userData?.role === 'nurse')
               size="small"
               variant="outlined"
               prepend-icon="mdi-eye-outline"
-              @click="$emit('view', patient.id)"
+              @click="$emit('view', patient.patient_id)"
             >
               View
             </v-btn>
@@ -76,7 +76,7 @@ const isNurse = computed(() => authStore.userData?.role === 'nurse')
               size="small"
               variant="flat"
               prepend-icon="mdi-file-document-outline"
-              @click="$emit('requestDischarge', patient.id)"
+              @click="$emit('requestDischarge', patient.patient_id)"
             >
               Request Discharge
             </v-btn>

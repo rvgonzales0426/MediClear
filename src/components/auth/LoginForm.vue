@@ -39,6 +39,7 @@ const onSubmit = async () => {
 
   if (error) {
     state.errorMessage = error.message || 'Error Logging In'
+    state.isLoading = false
   } else if (data) {
     state.successMessage = 'Login Successfully'
 

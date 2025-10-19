@@ -5,15 +5,15 @@ import PaginationComponent from '@/components/PaginationComponent.vue'
 import PatientDialog from '@/views/system/partials/PatientDialog.vue'
 import { usePatientStore } from '@/stores/patient'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
+import { useRouter } from 'vue-router'
 
 const patientStore = usePatientStore()
+const router = useRouter()
 
 // Load patients on component mount
 onMounted(() => {
   patientStore.fetchPatients()
 })
-
-console.log(patientStore.patients)
 
 //Load variables
 const stats = computed(() => {
@@ -54,6 +54,17 @@ const totalPage = ref(3)
 const currentPage = ref(1)
 
 const isDialogVisible = ref(false)
+
+const viewPatientInfo = (patient_id) => {
+  if (!patient_id) console.error('Patient ID is undefined')
+
+  router.push({ name: 'patient-info', params: { id: patient_id } })
+}
+
+// Handle discharge request following MediClear patient workflow
+const handleRequestDischarge = (patient_id) => {
+  // TODO: Implement discharge request logic
+}
 </script>
 
 <template>
@@ -87,7 +98,7 @@ const isDialogVisible = ref(false)
     <v-col cols="12" lg="12">
       <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
-          <TableComponent :patients="patientStore.patients" />
+          <TableComponent :patients="patientStore.patients" @view="viewPatientInfo" />
         </v-card-text>
       </v-card>
     </v-col>
