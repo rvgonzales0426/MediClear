@@ -21,23 +21,24 @@ defineEmits(['view', 'approve', 'reject'])
   <v-table>
     <thead>
       <tr>
-        <th v-for="column in columns" :key="column.key" class="text-left font-weight-bold">
-          {{ column.label }}
-        </th>
-        <th class="text-left font-weight-bold">Actions</th>
+        <th class="text-left font-weight-bold">Patient Name</th>
+        <th class="text-left font-weight-bold">Admission Date</th>
+        <th class="text-left font-weight-bold">Requested By</th>
+        <th class="text-left font-weight-bold">Request Date</th>
       </tr>
     </thead>
     <tbody>
       <tr v-if="loading">
-        <td :colspan="columns.length" class="text-center">
+        <td colspan="5" class="text-center">
           <v-progress-circular indeterminate></v-progress-circular>
         </td>
       </tr>
       <template v-else>
         <tr v-for="patient in patients" :key="patient.id">
-          <td v-for="column in columns" :key="column.key">
-            {{ patient[column.key] }}
-          </td>
+          <td>{{ patient.patient_name }}</td>
+          <td>{{ patient.admission_date }}</td>
+          <td>{{ patient.requested_by }}</td>
+          <td>{{ patient.request_date }}</td>
 
           <td class="d-flex ga-2 align-center">
             <v-btn size="small" @click="$emit('view', patient.id)"

@@ -1,59 +1,16 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue'
-import { patients, dischargingPatients } from '../PatientMockData'
-import { usePatientStore } from '@/stores/patient'
+import { ref } from 'vue'
 import TableComponent from '@/components/TableComponent.vue'
 import PatientActionTable from './PatientActionTable.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
-
-const patientStore = usePatientStore()
-
-// Load patients on component mount
-onMounted(() => {
-  patientStore.fetchPatients()
-})
-
-const stats = computed(() => {
-  return [
-    {
-      id: 1,
-      title: 'Pending Approvals',
-      text: 'Requiring your review',
-      count: patientStore.pendingDischarge,
-      color: 'orange',
-      icon: 'mdi-clock-time-three-outline',
-    },
-
-    {
-      id: 2,
-      title: 'Released Today',
-      text: 'Successfully discharged',
-      count: patientStore.releasedPatients,
-      color: 'green',
-      icon: 'mdi-check-circle-outline',
-    },
-    {
-      id: 3,
-      title: "Today's Discharges",
-      text: 'Total processed today',
-      count: patientStore.admittedPatients,
-      color: 'blue',
-      icon: 'mdi-arrow-top-right',
-    },
-  ]
-})
-
-const actionTableColumns = [
-  { key: 'patientName', label: 'Patient Name' },
-  { key: 'admissionDate', label: 'Admission Date' },
-  { key: 'requestedBy', label: 'Requested By' },
-  { key: 'requestDate', label: 'Request Date' },
-]
+import { useManagePatientsForDoctor } from './managePatientsForDoctor'
 
 //Sample PageLink
 const totalPage = ref(3)
 const currentPage = ref(1)
+
+const { dischargingPatients, stats, patientStore } = useManagePatientsForDoctor()
 </script>
 
 <template>
@@ -79,7 +36,7 @@ const currentPage = ref(1)
         subtitle="Discharge Requests Awaiting Approval"
       >
         <v-card-text>
-          <PatientActionTable :patients="dischargingPatients" :columns="actionTableColumns" />
+          <PatientActionTable :patients="dischargingPatients" />
         </v-card-text>
       </v-card>
     </v-col>
