@@ -1,101 +1,20 @@
 <script setup>
-import { patients, patientRecords } from './PatientMockData'
-import { computed } from 'vue'
+import { onMounted } from 'vue'
+import { usePatientStore } from '@/stores/patient'
+import { useDischargeWorkflow } from '@/composables/useDischargeWorkflow'
 
-const rows = computed(() => {
-  return [
-    {
-      title: ' Admitted',
-      subtitle: 'Patient admitted to hospital',
-      icon: 'mdi-account-multiple-outline',
-      color: 'blue',
-      patientCount: patients.filter((p) => p.status === 'Admitted').length,
-    },
+// Load patient store following MediClear pattern
+const patientStore = usePatientStore()
 
-    {
-      title: 'Discharge Requested',
-      subtitle: 'Nurse requests discharge',
-      icon: 'mdi-file-document-outline ',
-      color: 'orange',
-      patientCount: patients.filter((p) => p.status === 'Discharge Requested').length,
-    },
+// Use discharge workflow composable
+const { statusColors, workflowRows, workflowItems, patientWorkflowData, workflowMetrics } =
+  useDischargeWorkflow()
 
-    {
-      title: 'Approved',
-      subtitle: 'Doctor approves discharge',
-      icon: 'mdi-check-circle-outline',
-      color: 'green',
-      patientCount: patients.filter((p) => p.status === 'Approved').length,
-    },
-
-    {
-      title: 'Released',
-      subtitle: 'Patient released from hospital',
-      icon: 'mdi-check-circle-outline',
-      color: 'grey',
-      patientCount: patients.filter((p) => p.status === 'Released').length,
-    },
-  ]
-})
-
-const statuses = ['Admitted', 'Discharge Requested', 'Approved', 'Released']
-
-const items = computed(() => {
-  const totalPatients = patients.length
-
-  return statuses.map((status) => {
-    const count = patients.filter((p) => p.status === status).length
-    return {
-      title: status,
-      icon:
-        status === 'Admitted'
-          ? 'mdi-account-multiple-outline'
-          : status === 'Discharge Requested'
-            ? 'mdi-file-document-outline'
-            : 'mdi-check-circle-outline',
-      patientCount: count,
-      percentage: totalPatients ? (count / totalPatients) * 100 : 0,
-    }
-  })
-})
-
-const datas = computed(() => {
-  return patientRecords.map((p) => {
-    return {
-      patient: p.patientName,
-      caseNumber: p.caseNumber,
-      currentStatus: p.status,
-    }
-  })
-})
-
-const statusColor = {
-  'Discharge Requested': 'orange',
-  Approved: 'green',
-  Released: undefined,
-  Admitted: 'blue',
-}
-
-const averages = computed(() => {
-  return [
-    {
-      title: 'Average Processing Time',
-      days: 3.2 + ' ' + 'days',
-      text: 'From admission to release',
-    },
-
-    {
-      title: 'Pending Approvals',
-      totalPatients: patients.filter((p) => p.status === 'Discharge Requested').length,
-      text: 'Awaiting doctor review',
-    },
-
-    {
-      title: 'Daily Discharge Rate',
-      totalPatients: patients.filter((p) => p.status === 'Released').length,
-      text: 'Patients released today',
-    },
-  ]
+// Fetch patients on component mount
+onMounted(async () => {
+  if (!patientStore.patients || patientStore.patients.length === 0) {
+    await patientStore.fetchPatients()
+  }
 })
 </script>
 
@@ -106,7 +25,7 @@ const averages = computed(() => {
   >
     <v-card-text>
       <v-row>
-        <v-col cols="12" v-for="row in rows" :key="row.title">
+        <v-col cols="12" v-for="row in workflowRows" :key="row.title">
           <div class="d-flex ga-4 align-center flex-column flex-sm-row">
             <v-avatar :color="row.color" size="60" class="flex-shrink-0">
               <v-icon>{{ row.icon }}</v-icon>
@@ -119,7 +38,7 @@ const averages = computed(() => {
                 <h2 class="text-h6 text-sm-h5">{{ row.title }}</h2>
                 <v-chip
                   >{{ row.patientCount }}
-                  {{ row.patientCount > 1 ? 'Patients' : 'Patient' }}</v-chip
+                  {{ row.patientCount !== 1 ? 'Patients' : 'Patient' }}</v-chip
                 >
               </div>
 
@@ -138,10 +57,10 @@ const averages = computed(() => {
   </v-card>
 
   <v-row class="my-5">
-    <v-col v-for="item in items" :key="item.title" cols="12" lg="3" md="4">
-      <v-card :title="item.title" elevation="10" class="mx-3" rounded>
+    <v-col v-for="item in workflowItems" :key="item.title" cols="12" lg="3" md="4">
+      <v-card :title="item.title" elevation="10" class="mx-3">
         <template v-slot:append>
-          <v-icon>
+          <v-icon :color="item.color">
             {{ item.icon }}
           </v-icon>
         </template>
@@ -173,36 +92,44 @@ const averages = computed(() => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="data in datas" :key="data.caseNumber">
-                <td>{{ data.patient }}</td>
-                <td>{{ data.caseNumber }}</td>
+              <tr v-if="!patientWorkflowData || patientWorkflowData.length === 0">
+                <td colspan="5" class="text-center py-8">
+                  <v-progress-circular indeterminate color="primary" />
+                  <div class="text-body-2 mt-2">Loading patient data...</div>
+                </td>
+              </tr>
+              <tr v-else v-for="data in patientWorkflowData" :key="data.patient_id">
+                <td>{{ data.patient_name }}</td>
+                <td>{{ data.case_number }}</td>
                 <td>
                   <v-chip
-                    :color="statusColor[data.currentStatus] || 'grey'"
-                    text-color="white"
+                    :color="statusColors[data.current_status] || 'grey'"
                     variant="flat"
                     size="small"
+                    class="font-weight-medium"
                   >
-                    {{ data.currentStatus }}
+                    {{ data.current_status }}
                   </v-chip>
                 </td>
 
                 <td>
                   <div class="d-flex align-center ga-2">
                     <v-progress-linear
-                      model-value="3"
+                      :model-value="data.workflow_progress"
                       :height="7"
                       color="blue-darken-2"
                     ></v-progress-linear>
 
-                    <span>2/4</span>
+                    <span>{{ data.workflow_progress_text }}</span>
                   </div>
                 </td>
 
                 <td>
                   <div class="d-flex align-center ga-3">
                     <v-icon>mdi-clock-time-two-outline</v-icon>
-                    <p>22 days</p>
+                    <p>
+                      {{ data.days_in_process }} {{ data.days_in_process !== 1 ? 'days' : 'day' }}
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -214,15 +141,17 @@ const averages = computed(() => {
   </v-row>
 
   <v-row class="my-5">
-    <v-col v-for="average in averages" :key="average.title" cols="12" lg="4" md="3">
-      <v-card :title="average.title" elevation="10" class="mx-3" rounded>
+    <v-col v-for="metric in workflowMetrics" :key="metric.title" cols="12" lg="4" md="4">
+      <v-card :title="metric.title" elevation="10" class="mx-3">
+        <template v-slot:prepend>
+          <v-icon :icon="metric.icon" />
+        </template>
         <v-card-text class="text-start">
           <h3 class="text-h6">
-            {{ average.days }}
-            {{ average.totalPatients }}
+            {{ metric.value }}
           </h3>
 
-          <small class="text-caption"> {{ average.text }} </small>
+          <small class="text-caption"> {{ metric.text }} </small>
         </v-card-text>
       </v-card>
     </v-col>
