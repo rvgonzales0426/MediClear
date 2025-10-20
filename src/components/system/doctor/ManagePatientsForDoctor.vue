@@ -46,7 +46,7 @@ const viewPatientInfo = (patient_id) => {
         subtitle="Discharge Requests Awaiting Approval"
       >
         <v-card-text>
-          <PatientActionTable :patients="dischargingPatients" />
+          <PatientActionTable :patients="dischargingPatients" @view="viewPatientInfo" />
         </v-card-text>
       </v-card>
     </v-col>

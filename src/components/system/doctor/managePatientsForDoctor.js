@@ -6,7 +6,7 @@ export const useManagePatientsForDoctor = () => {
 
   //Patients who are requesting discharge
   const dischargingPatients = computed(() =>
-    patientStore.patients.filter((patient) => patient.status === 'discharging'),
+    patientStore.patients.filter((patient) => patient.status === 'Discharge Requested'),
   )
 
   // Load patients on component mount
