@@ -6,11 +6,21 @@ import PaginationComponent from '@/components/PaginationComponent.vue'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 import { useManagePatientsForDoctor } from './managePatientsForDoctor'
 
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 //Sample PageLink
 const totalPage = ref(3)
 const currentPage = ref(1)
 
 const { dischargingPatients, stats, patientStore } = useManagePatientsForDoctor()
+
+const viewPatientInfo = (patient_id) => {
+  if (!patient_id) console.error('Patient ID is undefined')
+
+  router.push({ name: 'patient-info', params: { id: patient_id } })
+}
 </script>
 
 <template>
@@ -47,7 +57,7 @@ const { dischargingPatients, stats, patientStore } = useManagePatientsForDoctor(
     <v-col cols="12" lg="12">
       <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
-          <TableComponent :patients="patientStore.patients" />
+          <TableComponent :patients="patientStore.patients" @view="viewPatientInfo" />
         </v-card-text>
       </v-card>
     </v-col>

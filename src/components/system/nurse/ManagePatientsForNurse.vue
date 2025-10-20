@@ -7,8 +7,8 @@ import { usePatientStore } from '@/stores/patient'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 import { useRouter } from 'vue-router'
 
-const patientStore = usePatientStore()
 const router = useRouter()
+const patientStore = usePatientStore()
 
 // Load patients on component mount
 onMounted(() => {

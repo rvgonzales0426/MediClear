@@ -6,6 +6,10 @@ import PaginationComponent from '../PaginationComponent.vue'
 import PatientDialog from '@/views/system/partials/PatientDialog.vue'
 import dayjs from 'dayjs'
 
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 const patientStore = usePatientStore()
 const authStore = useAuthStore()
 const patientData = ref(null)
@@ -30,6 +34,12 @@ const onUpdate = (patient) => {
 onMounted(() => {
   patientStore.fetchPatients()
 })
+
+const viewPatientInfo = (patient_id) => {
+  if (!patient_id) console.error('Patient ID is undefined')
+
+  router.push({ name: 'patient-info', params: { id: patient_id } })
+}
 </script>
 
 <template>
@@ -126,7 +136,9 @@ onMounted(() => {
                 <td>{{ patient.attending_physician }}</td>
                 <td>
                   <div class="d-flex align-center ga-2">
-                    <v-btn size="small"><v-icon>mdi-eye-outline</v-icon>View</v-btn>
+                    <v-btn size="small" @click="viewPatientInfo(patient.patient_id)"
+                      ><v-icon>mdi-eye-outline</v-icon>View</v-btn
+                    >
                     <v-btn size="small" @click="onUpdate(patient)" v-if="isNurse"
                       ><v-icon>mdi-pencil</v-icon>Edit</v-btn
                     >
