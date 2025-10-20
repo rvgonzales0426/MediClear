@@ -14,7 +14,7 @@ export const usePatientStore = defineStore('patient', () => {
     isLoading.value = false
   }
 
-  // Computed
+  // Computed Properties
   const totalPatients = computed(() => patients.value.length)
 
   const pendingDischarge = computed(

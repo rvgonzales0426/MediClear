@@ -1,9 +1,11 @@
 import { usePatientStore } from '@/stores/patient'
+import { useAuthStore } from '@/stores/auth'
 import { computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 
 export const usePatientInfo = (patient_id = null) => {
   const patientStore = usePatientStore()
+  const authStore = useAuthStore()
   const route = useRoute()
 
   const currentPatientId = computed(() => {
@@ -12,6 +14,7 @@ export const usePatientInfo = (patient_id = null) => {
 
   const patientInfo = computed(() => patientStore.currentPatient)
   const isLoading = computed(() => patientStore.isLoading)
+  const isDoctor = computed(() => authStore.userData?.role === 'doctor')
 
   // Fixed: Ensure reactivity after async operations
   watch(
@@ -65,6 +68,7 @@ export const usePatientInfo = (patient_id = null) => {
 
   return {
     isLoading,
+    isDoctor,
     patientInfo,
     currentPatientId,
     refreshPatientInfo,

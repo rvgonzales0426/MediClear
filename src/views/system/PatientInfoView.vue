@@ -3,7 +3,7 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import { usePatientInfo } from './partials/patientInfo'
 import PatientInfoWidgets from './partials/PatientInfoWidgets.vue'
 
-const { currentPatientId, patientInfo, refreshPatientInfo, isLoading } = usePatientInfo()
+const { currentPatientId, patientInfo, refreshPatientInfo, isLoading, isDoctor } = usePatientInfo()
 
 // Status colors following MediClear patient workflow
 const statusColors = {
@@ -27,19 +27,76 @@ const statusColors = {
 
       <!-- Patient Info Content -->
       <template v-else-if="patientInfo">
+        <!-- Patient Header Card -->
         <v-row>
           <v-col cols="12">
-            <v-card title="Patient Information">
+            <v-card elevation="4">
+              <v-card-title class="d-flex align-center">
+                <v-btn
+                  icon="mdi-arrow-left"
+                  variant="text"
+                  size="small"
+                  @click="$router.go(-1)"
+                  class="me-2"
+                />
+                <span class="text-h5">Patient Information</span>
+                <v-spacer />
+                <v-btn
+                  icon="mdi-refresh"
+                  variant="text"
+                  @click="refreshPatientInfo"
+                  :loading="isLoading"
+                />
+              </v-card-title>
+
               <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col cols="12">
-                      <h3>{{ patientInfo.patient_name }}</h3>
-                      <p>Case: {{ patientInfo.case_number }}</p>
-                      <p>Status: {{ patientInfo.status }}</p>
-                    </v-col>
-                  </v-row>
-                </v-container>
+                <v-row class="align-center">
+                  <!-- Patient Info Section -->
+                  <v-col cols="12" md="7">
+                    <div class="mb-2">
+                      <div class="text-h4 mb-2">{{ patientInfo.patient_name }}</div>
+                      <div class="text-subtitle-1 text-medium-emphasis mb-3">
+                        Case #{{ patientInfo.case_number }}
+                      </div>
+                      <v-chip
+                        :color="statusColors[patientInfo.status]"
+                        variant="flat"
+                        size="default"
+                        class="font-weight-medium"
+                      >
+                        {{ patientInfo.status }}
+                      </v-chip>
+                    </div>
+                  </v-col>
+
+                  <!-- Action Buttons Section (Doctor Only) -->
+                  <v-col
+                    cols="12"
+                    md="5"
+                    v-if="isDoctor && patientInfo.status === 'Discharge Requested'"
+                  >
+                    <div class="d-flex flex-column flex-sm-row ga-2 justify-md-end">
+                      <v-btn
+                        prepend-icon="mdi-check-circle-outline"
+                        color="green"
+                        variant="flat"
+                        block
+                        class="text-none"
+                      >
+                        Approve Discharge
+                      </v-btn>
+                      <v-btn
+                        prepend-icon="mdi-close-circle-outline"
+                        color="red"
+                        variant="outlined"
+                        block
+                        class="text-none"
+                      >
+                        Reject Request
+                      </v-btn>
+                    </div>
+                  </v-col>
+                </v-row>
               </v-card-text>
             </v-card>
           </v-col>

@@ -1,4 +1,5 @@
 <script setup>
+import dayjs from 'dayjs'
 const props = defineProps({
   patient: {
     type: Object, // Fixed: Should be Object, not Array
@@ -31,7 +32,9 @@ const props = defineProps({
 
           <v-col cols="12">
             <div class="text-subtitle-2 text-medium-emphasis mb-1">Admission Date</div>
-            <div class="text-body-1">{{ patient.addmission_date || 'Not specified' }}</div>
+            <div class="text-body-1">
+              {{ dayjs(patient.admission_date).format('MMMM D, YYYY') || 'Not specified' }}
+            </div>
           </v-col>
 
           <v-col cols="12">
