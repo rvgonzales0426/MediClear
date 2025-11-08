@@ -122,7 +122,13 @@ const viewPatientInfo = (patient_id) => {
                 <td>{{ patient.patient_name }}</td>
                 <td>{{ patient.age_gender }}</td>
                 <td>{{ patient.ward }}</td>
-                <td>{{ dayjs(patient.admission_date).format('YYYY-MMM-DD') }}</td>
+                <td>
+                  {{
+                    patient.addmission_date
+                      ? dayjs(patient.addmission_date.split('T')[0]).format('YYYY-MMM-DD')
+                      : ''
+                  }}
+                </td>
                 <td>
                   <v-chip
                     :color="statusColor[patient.status] || 'grey'"
