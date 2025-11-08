@@ -94,7 +94,7 @@ const patientStatus = [
 
             <v-col cols="12">
               <v-date-input
-                label="Addmission Date"
+                label="Admission Date"
                 format="yyyy/MM/dd"
                 v-model="formData.addmission_date"
                 :rules="[requiredValidator]"
