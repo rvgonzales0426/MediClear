@@ -66,6 +66,8 @@ const handleReject = async (patient_id) => {
     const { data, error } = await patientStore.updatePatient({
       patient_id: patient_id,
       status: 'Admitted',
+      request_date: null,
+      requested_by: null,
     })
 
     if (error) {
