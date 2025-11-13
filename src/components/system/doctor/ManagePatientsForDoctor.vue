@@ -5,6 +5,8 @@ import PatientActionTable from './PatientActionTable.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 import { useManagePatientsForDoctor } from './managePatientsForDoctor'
+import { usePatientStore } from '@/stores/patient'
+import { toast } from 'vue3-toastify'
 
 import { useRouter } from 'vue-router'
 
@@ -20,6 +22,66 @@ const viewPatientInfo = (patient_id) => {
   if (!patient_id) console.error('Patient ID is undefined')
 
   router.push({ name: 'patient-info', params: { id: patient_id } })
+}
+
+// Handle approve discharge request
+const handleApprove = async (patient_id) => {
+  if (!patient_id) {
+    console.error('Patient ID is undefined')
+    toast.error('Invalid patient ID', { position: 'top-center' })
+    return
+  }
+
+  try {
+    const { data, error } = await patientStore.updatePatient({
+      patient_id: patient_id,
+      status: 'Approved',
+    })
+
+    if (error) {
+      console.error('Error approving discharge:', error.message)
+      toast.error('Failed to approve discharge', { position: 'top-center' })
+      return
+    }
+
+    if (data) {
+      toast.success('Discharge approved successfully', { position: 'top-center' })
+      await patientStore.fetchPatients()
+    }
+  } catch (err) {
+    console.error('Unexpected error:', err)
+    toast.error('An unexpected error occurred', { position: 'top-center' })
+  }
+}
+
+// Handle reject discharge request
+const handleReject = async (patient_id) => {
+  if (!patient_id) {
+    console.error('Patient ID is undefined')
+    toast.error('Invalid patient ID', { position: 'top-center' })
+    return
+  }
+
+  try {
+    const { data, error } = await patientStore.updatePatient({
+      patient_id: patient_id,
+      status: 'Admitted',
+    })
+
+    if (error) {
+      console.error('Error rejecting discharge:', error.message)
+      toast.error('Failed to reject discharge', { position: 'top-center' })
+      return
+    }
+
+    if (data) {
+      toast.success('Discharge request rejected', { position: 'top-center' })
+      await patientStore.fetchPatients()
+    }
+  } catch (err) {
+    console.error('Unexpected error:', err)
+    toast.error('An unexpected error occurred', { position: 'top-center' })
+  }
 }
 </script>
 
@@ -46,7 +108,12 @@ const viewPatientInfo = (patient_id) => {
         subtitle="Discharge Requests Awaiting Approval"
       >
         <v-card-text>
-          <PatientActionTable :patients="dischargingPatients" @view="viewPatientInfo" />
+          <PatientActionTable
+            :patients="dischargingPatients"
+            @view="viewPatientInfo"
+            @approve="handleApprove"
+            @reject="handleReject"
+          />
         </v-card-text>
       </v-card>
     </v-col>
