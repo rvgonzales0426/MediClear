@@ -1,4 +1,6 @@
 <script setup>
+import dayjs from 'dayjs'
+
 defineProps({
   patients: {
     type: Array,
@@ -33,9 +35,21 @@ defineEmits(['view', 'approve', 'reject'])
       <template v-else>
         <tr v-for="patient in patients" :key="patient.id">
           <td>{{ patient.patient_name }}</td>
-          <td>{{ patient.addmission_date }}</td>
+          <td>
+            {{
+              patient.addmission_date
+                ? dayjs(patient.addmission_date.split('T')[0]).format('YYYY-MMM-DD')
+                : 'N/A'
+            }}
+          </td>
           <td>{{ patient.requested_by || 'Not Specified' }}</td>
-          <td>{{ patient.request_date || 'Not Specified' }}</td>
+          <td>
+            {{
+              patient.request_date
+                ? dayjs(patient.request_date.split('T')[0]).format('YYYY-MMM-DD')
+                : 'Not Specified'
+            }}
+          </td>
 
           <td class="d-flex ga-2 align-center">
             <v-btn size="small" @click="$emit('view', patient.patient_id)"
