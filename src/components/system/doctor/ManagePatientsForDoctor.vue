@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import TableComponent from '@/components/TableComponent.vue'
 import PatientActionTable from './PatientActionTable.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
@@ -12,11 +12,23 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-//Sample PageLink
-const totalPage = ref(3)
+//Pagination
+const itemsPerPage = 10
 const currentPage = ref(1)
 
 const { dischargingPatients, stats, patientStore } = useManagePatientsForDoctor()
+
+// Computed property for total pages
+const totalPage = computed(() => {
+  return Math.ceil(patientStore.totalPatients / itemsPerPage)
+})
+
+// Computed property for paginated patients
+const paginatedPatients = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return patientStore.patients.slice(start, end)
+})
 
 const viewPatientInfo = (patient_id) => {
   if (!patient_id) console.error('Patient ID is undefined')
@@ -126,7 +138,7 @@ const handleReject = async (patient_id) => {
     <v-col cols="12" lg="12">
       <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
-          <TableComponent :patients="patientStore.patients" @view="viewPatientInfo" />
+          <TableComponent :patients="paginatedPatients" @view="viewPatientInfo" />
         </v-card-text>
       </v-card>
     </v-col>
