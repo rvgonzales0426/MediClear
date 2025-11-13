@@ -6,6 +6,7 @@ import PatientDialog from '@/views/system/partials/PatientDialog.vue'
 import { usePatientStore } from '@/stores/patient'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue3-toastify'
 
 const router = useRouter()
 const patientStore = usePatientStore()
@@ -24,13 +25,15 @@ const stats = computed(() => {
       text: 'Currently assigned',
       count: patientStore.totalPatients,
       color: 'blue',
+      icon: 'mdi-account-group-outline',
     },
     {
       id: 2,
-      title: ' Pending Discharge',
+      title: 'Pending Discharge',
       text: 'Awaiting approval',
       count: patientStore.pendingDischarge,
       color: 'orange',
+      icon: 'mdi-clock-alert-outline',
     },
     {
       id: 3,
@@ -38,13 +41,15 @@ const stats = computed(() => {
       text: 'Ready for release',
       count: patientStore.approvedPatients,
       color: 'green',
+      icon: 'mdi-check-circle-outline',
     },
     {
       id: 4,
       title: 'Released',
       text: 'Completed today',
       count: patientStore.releasedPatients,
-      color: null,
+      color: 'grey',
+      icon: 'mdi-exit-to-app',
     },
   ]
 })
@@ -62,8 +67,36 @@ const viewPatientInfo = (patient_id) => {
 }
 
 // Handle discharge request following MediClear patient workflow
-const handleRequestDischarge = (patient_id) => {
-  // TODO: Implement discharge request logic
+const handleRequestDischarge = async (patient_id) => {
+  if (!patient_id) {
+    console.error('Patient ID is undefined')
+    toast.error('Invalid patient ID', { position: 'top-center' })
+    return
+  }
+
+  try {
+    // Update patient status to 'Discharge Requested'
+    const { data, error } = await patientStore.updatePatient({
+      patient_id: patient_id,
+      status: 'Discharge Requested',
+      request_date: new Date().toISOString(),
+    })
+
+    if (error) {
+      console.error('Error requesting discharge:', error.message)
+      toast.error('Failed to request discharge', { position: 'top-center' })
+      return
+    }
+
+    if (data) {
+      toast.success('Discharge request submitted successfully', { position: 'top-center' })
+      // Refresh patient list
+      await patientStore.fetchPatients()
+    }
+  } catch (err) {
+    console.error('Unexpected error:', err)
+    toast.error('An unexpected error occurred', { position: 'top-center' })
+  }
 }
 </script>
 
@@ -98,7 +131,11 @@ const handleRequestDischarge = (patient_id) => {
     <v-col cols="12" lg="12">
       <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
-          <TableComponent :patients="patientStore.patients" @view="viewPatientInfo" />
+          <TableComponent
+            :patients="patientStore.patients"
+            @view="viewPatientInfo"
+            @requestDischarge="handleRequestDischarge"
+          />
         </v-card-text>
       </v-card>
     </v-col>
