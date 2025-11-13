@@ -22,9 +22,21 @@ const statusColor = {
   Admitted: 'blue',
 }
 
-//Sample PageLink
-const totalPage = ref(3)
+//Pagination
+const itemsPerPage = 10
 const currentPage = ref(1)
+
+// Computed property for total pages
+const totalPage = computed(() => {
+  return Math.ceil(patientStore.totalPatients / itemsPerPage)
+})
+
+// Computed property for paginated patients
+const paginatedPatients = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return patientStore.patients.slice(start, end)
+})
 
 const onUpdate = (patient) => {
   patientData.value = patient
@@ -117,7 +129,7 @@ const viewPatientInfo = (patient_id) => {
                 </td>
               </tr>
 
-              <tr v-else v-for="patient in patientStore.patients" :key="patient.id">
+              <tr v-else v-for="patient in paginatedPatients" :key="patient.id">
                 <td>{{ patient.case_number }}</td>
                 <td>{{ patient.patient_name }}</td>
                 <td>{{ patient.age_gender }}</td>
