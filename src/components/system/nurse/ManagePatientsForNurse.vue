@@ -57,9 +57,21 @@ const stats = computed(() => {
   ]
 })
 
-//Sample PageLink
-const totalPage = ref(3)
+//Pagination
+const itemsPerPage = 10
 const currentPage = ref(1)
+
+// Computed property for total pages
+const totalPage = computed(() => {
+  return Math.ceil(patientStore.totalPatients / itemsPerPage)
+})
+
+// Computed property for paginated patients
+const paginatedPatients = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return patientStore.patients.slice(start, end)
+})
 
 const isDialogVisible = ref(false)
 
@@ -155,7 +167,7 @@ const handleRequestDischarge = async (patient_id) => {
       <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
           <TableComponent
-            :patients="patientStore.patients"
+            :patients="paginatedPatients"
             @view="viewPatientInfo"
             @requestDischarge="handleRequestDischarge"
           />
