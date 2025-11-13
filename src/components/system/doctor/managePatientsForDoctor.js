@@ -22,24 +22,24 @@ export const useManagePatientsForDoctor = () => {
         text: 'Requiring your review',
         count: patientStore.pendingDischarge,
         color: 'orange',
-        icon: 'mdi-clock-time-three-outline',
+        icon: 'mdi-clock-alert-outline',
       },
 
       {
         id: 2,
-        title: 'Released Today',
-        text: 'Successfully discharged',
-        count: patientStore.releasedPatients,
+        title: 'Approved Patients',
+        text: 'Ready for discharge',
+        count: patientStore.approvedPatients,
         color: 'green',
         icon: 'mdi-check-circle-outline',
       },
       {
         id: 3,
-        title: "Today's Discharges",
-        text: 'Total processed today',
-        count: patientStore.admittedPatients,
+        title: 'Released Patients',
+        text: 'Successfully discharged',
+        count: patientStore.releasedPatients,
         color: 'blue',
-        icon: 'mdi-arrow-top-right',
+        icon: 'mdi-exit-to-app',
       },
     ]
   })
