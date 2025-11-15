@@ -43,8 +43,11 @@ const onUpdate = (patient) => {
   isDialogVisible.value = true
 }
 
-onMounted(() => {
-  patientStore.fetchPatients()
+onMounted(async () => {
+  await authStore.getUserInformation()
+  const userRole = authStore.userData?.role
+  const userId = authStore.userData?.id
+  await patientStore.fetchPatients(userRole, userId)
 })
 
 const viewPatientInfo = (patient_id) => {
@@ -151,7 +154,7 @@ const viewPatientInfo = (patient_id) => {
                     {{ patient.status }}
                   </v-chip>
                 </td>
-                <td>{{ patient.attending_doctor_name }}</td>
+                <td>{{ patient.attending_doctor_name || 'Not Assigned' }}</td>
                 <td>
                   <div class="d-flex align-center ga-2">
                     <v-btn size="small" @click="viewPatientInfo(patient.patient_id)"

@@ -40,7 +40,7 @@ watch(
       if (!newPatientData.attending_doctor_name) {
         const doctor = doctors.value.find((d) => d.id === newPatientData.attending_doctor_id)
         if (doctor) {
-          formData.attending_doctor_name = doctor.full_name || doctor.email
+          formData.value.attending_doctor_name = doctor.full_name || doctor.email
         }
       }
     }
@@ -50,13 +50,21 @@ watch(
 
 // Watch for doctor selection and update attending_doctor_name
 watch(
-  () => formData.attending_doctor_id,
+  () => formData.value.attending_doctor_id,
   (newDoctorId) => {
+    console.log('Doctor ID changed to:', newDoctorId)
     if (newDoctorId) {
       const selectedDoctor = doctors.value.find((d) => d.id === newDoctorId)
+      console.log('Selected doctor:', selectedDoctor)
       if (selectedDoctor) {
-        formData.attending_doctor_name = selectedDoctor.full_name || selectedDoctor.email
+        formData.value.attending_doctor_name = selectedDoctor.full_name || selectedDoctor.email
+        console.log('Set attending_doctor_name to:', formData.value.attending_doctor_name)
+      } else {
+        console.warn('⚠️ Doctor not found in list for ID:', newDoctorId)
       }
+    } else {
+      formData.value.attending_doctor_name = ''
+      console.log('Cleared attending_doctor_name')
     }
   },
 )
