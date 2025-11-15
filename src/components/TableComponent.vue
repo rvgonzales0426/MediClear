@@ -58,7 +58,7 @@ const isNurse = computed(() => authStore.userData?.role === 'nurse')
             {{ patient.status }}
           </v-chip>
         </td>
-        <td class="py-3">{{ patient.attending_physician }}</td>
+        <td class="py-3">{{ patient.attending_doctor_name }}</td>
         <td class="py-3">
           <div class="d-flex align-center ga-2">
             <v-btn

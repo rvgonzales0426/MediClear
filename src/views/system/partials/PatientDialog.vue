@@ -1,5 +1,7 @@
 <script setup>
+import { onMounted, watch } from 'vue'
 import { usePatientOperations } from '@/composables/usePatientOperations'
+import { useDoctors } from '@/composables/useDoctors'
 import { requiredValidator } from '@/utils/validators'
 
 const props = defineProps({
@@ -17,6 +19,46 @@ const emits = defineEmits(['update:isDialogVisible'])
 const { formAction, isUpdate, modal, formData, refVForm, onFormSubmit } = usePatientOperations(
   props,
   emits,
+)
+
+const { doctors, fetchDoctors, doctorOptions, isLoading, error } = useDoctors()
+
+// Fetch doctors when component mounts
+onMounted(async () => {
+  console.log('PatientDialog mounted, fetching doctors...')
+  await fetchDoctors()
+  console.log('Doctors after fetch:', doctors.value)
+  console.log('Doctor options:', doctorOptions())
+})
+
+// Watch for patient data changes (when editing)
+watch(
+  () => props.patientData,
+  (newPatientData) => {
+    if (newPatientData && newPatientData.attending_doctor_id && doctors.value.length > 0) {
+      // If editing and doctor name is missing, populate it from doctors list
+      if (!newPatientData.attending_doctor_name) {
+        const doctor = doctors.value.find((d) => d.id === newPatientData.attending_doctor_id)
+        if (doctor) {
+          formData.attending_doctor_name = doctor.full_name || doctor.email
+        }
+      }
+    }
+  },
+  { immediate: true },
+)
+
+// Watch for doctor selection and update attending_doctor_name
+watch(
+  () => formData.attending_doctor_id,
+  (newDoctorId) => {
+    if (newDoctorId) {
+      const selectedDoctor = doctors.value.find((d) => d.id === newDoctorId)
+      if (selectedDoctor) {
+        formData.attending_doctor_name = selectedDoctor.full_name || selectedDoctor.email
+      }
+    }
+  },
 )
 
 const patientStatus = [
@@ -84,12 +126,30 @@ const patientStatus = [
             </v-col>
 
             <v-col cols="12">
-              <v-text-field
+              <v-select
                 label="Attending Physician"
-                type="text"
-                v-model="formData.attending_physician"
+                v-model="formData.attending_doctor_id"
+                :items="doctorOptions()"
+                item-title="title"
+                item-value="value"
                 :rules="[requiredValidator]"
-              />
+                :loading="isLoading"
+                :disabled="isLoading || error"
+                :hint="error || 'Select the doctor assigned to this patient'"
+                :error="!!error"
+                persistent-hint
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props" :subtitle="item.raw.subtitle"> </v-list-item>
+                </template>
+                <template v-slot:no-data>
+                  <v-list-item>
+                    <v-list-item-title>
+                      {{ error || 'No doctors registered. Please register a doctor first.' }}
+                    </v-list-item-title>
+                  </v-list-item>
+                </template>
+              </v-select>
             </v-col>
 
             <v-col cols="12">

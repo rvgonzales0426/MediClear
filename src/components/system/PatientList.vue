@@ -151,7 +151,7 @@ const viewPatientInfo = (patient_id) => {
                     {{ patient.status }}
                   </v-chip>
                 </td>
-                <td>{{ patient.attending_physician }}</td>
+                <td>{{ patient.attending_doctor_name }}</td>
                 <td>
                   <div class="d-flex align-center ga-2">
                     <v-btn size="small" @click="viewPatientInfo(patient.patient_id)"

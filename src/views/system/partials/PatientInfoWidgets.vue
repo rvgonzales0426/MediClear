@@ -39,7 +39,7 @@ const props = defineProps({
 
           <v-col cols="12">
             <div class="text-subtitle-2 text-medium-emphasis mb-1">Attending Physician</div>
-            <div class="text-body-1">{{ patient.attending_physician || 'Not assigned' }}</div>
+            <div class="text-body-1">{{ patient.attending_doctor_name || 'Not assigned' }}</div>
           </v-col>
 
           <v-col cols="12">

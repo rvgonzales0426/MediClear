@@ -36,6 +36,9 @@ export const usePatientStore = defineStore('patient', () => {
   // Actions
   const fetchPatients = async () => {
     isLoading.value = true
+
+    // Fetch all patients - RLS will automatically filter based on user role
+    // Doctors will only see their own patients, nurses will see all patients
     const { data, error } = await supabase.from('patients').select('*')
 
     if (error) console.log(error, 'Error fetching patients')
