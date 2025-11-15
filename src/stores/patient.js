@@ -34,17 +34,45 @@ export const usePatientStore = defineStore('patient', () => {
   )
 
   // Actions
-  const fetchPatients = async () => {
+  const fetchPatients = async (userRole = null, userId = null) => {
     isLoading.value = true
 
     // Fetch all patients - RLS will automatically filter based on user role
     // Doctors will only see their own patients, nurses will see all patients
-    const { data, error } = await supabase.from('patients').select('*')
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-    if (error) console.log(error, 'Error fetching patients')
+    if (error) {
+      console.error('Error fetching patients:', error)
+    }
 
     if (data) {
-      patients.value = data
+      console.log('Fetched patients from database:', data.length, 'patients')
+
+      // Client-side safeguard: If RLS fails, filter on client
+      if (userRole === 'doctor' && userId) {
+        const filteredPatients = data.filter((p) => p.attending_doctor_id === userId)
+        console.log('Client-side filtered for doctor:', filteredPatients.length, 'patients')
+
+        if (data.length !== filteredPatients.length) {
+          console.warn(
+            '⚠️ RLS NOT WORKING! Server returned',
+            data.length,
+            'but should be',
+            filteredPatients.length,
+          )
+          console.warn('Applying client-side filter as safeguard')
+          patients.value = filteredPatients
+        } else {
+          console.log('✅ RLS working correctly')
+          patients.value = data
+        }
+      } else {
+        patients.value = data
+      }
+
       isLoading.value = false
     }
   }
