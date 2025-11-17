@@ -24,7 +24,6 @@ export const usePatientOperations = (props, emits) => {
     addmission_date: null,
     status: 'Admitted',
     attending_doctor_id: null,
-    attending_doctor_name: '',
   }
 
   const formData = ref({

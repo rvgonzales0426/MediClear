@@ -45,9 +45,8 @@ export const useDoctors = () => {
   // Get doctor options formatted for v-select
   const doctorOptions = () => {
     return doctors.value.map((doctor) => ({
-      title: doctor.full_name || doctor.email,
+      title: 'Dr ' + doctor.full_name || doctor.email,
       value: doctor.id,
-      subtitle: doctor.email,
     }))
   }
 
