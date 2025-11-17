@@ -24,6 +24,13 @@ export const usePatientOperations = (props, emits) => {
     addmission_date: null,
     status: 'Admitted',
     attending_doctor_id: null,
+    phone_number: null,
+    address: null,
+    emergency_contact_num: null,
+    emergency_contact_name: null,
+    room_number: null,
+    ward: null,
+    bed_number: null,
   }
 
   const formData = ref({
@@ -54,14 +61,7 @@ export const usePatientOperations = (props, emits) => {
     // Debug: Log the submission data
     console.log('Submitting patient data:', {
       attending_doctor_id: submissionData.attending_doctor_id,
-      attending_doctor_name: submissionData.attending_doctor_name,
     })
-
-    // Ensure attending_doctor_name is set if attending_doctor_id exists
-    if (!submissionData.attending_doctor_name && submissionData.attending_doctor_id) {
-      console.warn('⚠️ attending_doctor_name is missing but attending_doctor_id exists!')
-      console.warn('formData:', formData.value)
-    }
 
     const { data, error } = isUpdate.value
       ? await patientStore.updatePatient(submissionData)

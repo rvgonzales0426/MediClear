@@ -2,7 +2,7 @@
 import { onMounted, watch } from 'vue'
 import { usePatientOperations } from '@/composables/usePatientOperations'
 import { useDoctors } from '@/composables/useDoctors'
-import { requiredValidator } from '@/utils/validators'
+import { requiredValidator, phPhoneValidator } from '@/utils/validators'
 
 const props = defineProps({
   isDialogVisible: {
@@ -56,15 +56,6 @@ watch(
     if (newDoctorId) {
       const selectedDoctor = doctors.value.find((d) => d.id === newDoctorId)
       console.log('Selected doctor:', selectedDoctor)
-      if (selectedDoctor) {
-        formData.value.attending_doctor_name = selectedDoctor.full_name || selectedDoctor.email
-        console.log('Set attending_doctor_name to:', formData.value.attending_doctor_name)
-      } else {
-        console.warn('⚠️ Doctor not found in list for ID:', newDoctorId)
-      }
-    } else {
-      formData.value.attending_doctor_name = ''
-      console.log('Cleared attending_doctor_name')
     }
   },
 )
@@ -87,6 +78,14 @@ const patientStatus = [
     value: 'Released',
   },
 ]
+
+const wardOptions = [
+  { title: 'General Medicine', value: 'genera medicine' },
+  { title: 'Cardiology', value: 'cardiology' },
+  { title: 'Emergency', value: 'emergency' },
+  { title: 'Orthopedics', value: 'orthopedics' },
+  { title: 'Maternity', value: 'matternity' },
+]
 </script>
 
 <template>
@@ -97,6 +96,14 @@ const patientStatus = [
           <v-row>
             <v-col cols="12">
               <v-text-field
+                label="Patient Name"
+                type="text"
+                v-model="formData.patient_name"
+                :rules="[requiredValidator]"
+              />
+            </v-col>
+            <v-col cols="6">
+              <v-text-field
                 label="Case Number"
                 type="number"
                 v-model="formData.case_number"
@@ -104,11 +111,47 @@ const patientStatus = [
               />
             </v-col>
 
-            <v-col cols="12">
+            <v-col cols="6">
               <v-text-field
-                label="Patient Name"
+                label="Phone number"
+                type="number"
+                v-model="formData.phone_number"
+                :rules="[requiredValidator, phPhoneValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Emergency Contact Name"
                 type="text"
-                v-model="formData.patient_name"
+                v-model="formData.emergency_contact_name"
+                :rules="[requiredValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Emergency Contact Number"
+                type="number"
+                v-model="formData.emergency_contact_num"
+                :rules="[requiredValidator, phPhoneValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Room Number"
+                type="text"
+                v-model="formData.room_number"
+                :rules="[requiredValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Bed Number"
+                type="text"
+                v-model="formData.bed_number"
                 :rules="[requiredValidator]"
               />
             </v-col>
@@ -122,13 +165,24 @@ const patientStatus = [
               />
             </v-col>
 
-            <v-col cols="6 ">
+            <v-col cols="6">
               <v-select
                 label="Status"
                 v-model="formData.status"
                 :items="patientStatus"
-                :tile="patientStatus.title"
+                :title="patientStatus.title"
                 :value="patientStatus.value"
+                :rules="[requiredValidator]"
+              ></v-select>
+            </v-col>
+
+            <v-col cols="12">
+              <v-select
+                label="Ward"
+                v-model="formData.ward"
+                :items="wardOptions"
+                :title="wardOptions.title"
+                :value="wardOptions.value"
                 :rules="[requiredValidator]"
               ></v-select>
             </v-col>
