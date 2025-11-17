@@ -24,9 +24,11 @@ export const usePatientOperations = (props, emits) => {
     addmission_date: null,
     status: 'Admitted',
     attending_doctor_id: null,
+    attending_doctor_name: null,
     phone_number: null,
     address: null,
-    emergency_contact_num: null,
+    date_of_birth: null,
+    emergency_contact_phone: null,
     emergency_contact_name: null,
     room_number: null,
     ward: null,
@@ -71,7 +73,7 @@ export const usePatientOperations = (props, emits) => {
       console.error('Error submitting patient data:', error.message)
       // Handle error (e.g., show notification to user)
 
-      toast.error(error.message, { position: 'top-center' })
+      toast.error('An Error Occured', { position: 'top-center' })
       formAction.value.formProccess = false
       return
     } else if (data) {

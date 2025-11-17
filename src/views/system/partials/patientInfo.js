@@ -59,18 +59,10 @@ export const usePatientInfo = (patient_id = null) => {
     }
   })
 
-  const refreshPatientInfo = async () => {
-    if (currentPatientId.value) {
-      await patientStore.fetchPatientById(currentPatientId.value)
-      await nextTick() // Ensure reactivity
-    }
-  }
-
   return {
     isLoading,
     isDoctor,
     patientInfo,
     currentPatientId,
-    refreshPatientInfo,
   }
 }
