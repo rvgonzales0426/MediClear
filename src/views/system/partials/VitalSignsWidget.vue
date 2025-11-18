@@ -25,7 +25,7 @@ const datetimeLabel = computed(() => {
     const formatted = dayjs(formData.value.record_datetime).format('MMM DD, YYYY h:mm A')
     return `Last Updated: ${formatted}`
   }
-  return 'Date & Time'
+  return 'No date recorded'
 })
 </script>
 
