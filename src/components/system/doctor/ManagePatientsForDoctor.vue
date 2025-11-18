@@ -133,7 +133,7 @@ const handleReject = async (patient_id) => {
   </v-row>
 
   <!-- Table -->
-  <v-row v-if="patientStore.patients">
+  <v-row v-if="!patientStore.isLoading">
     <v-col cols="12" lg="12">
       <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
@@ -143,5 +143,17 @@ const handleReject = async (patient_id) => {
     </v-col>
   </v-row>
 
-  <PaginationComponent v-model="currentPage" :totalPage="totalPage" />
+  <!-- Loading State -->
+  <v-row v-else>
+    <v-col cols="12" class="text-center py-8">
+      <v-progress-circular indeterminate color="primary" size="64" />
+      <div class="text-body-1 mt-4">Loading assigned patients...</div>
+    </v-col>
+  </v-row>
+
+  <PaginationComponent
+    v-if="!patientStore.isLoading"
+    v-model="currentPage"
+    :totalPage="totalPage"
+  />
 </template>
