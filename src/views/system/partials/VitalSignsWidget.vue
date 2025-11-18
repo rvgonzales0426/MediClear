@@ -45,14 +45,16 @@ const datetimeLabel = computed(() => {
       <v-container>
         <v-row>
           <v-col cols="6">
+            <p class="text-caption" v-if="!isEditing">{{ datetimeLabel }}</p>
             <v-text-field
               v-model="formData.record_datetime"
-              :label="datetimeLabel"
+              label="Date & Time"
               type="datetime-local"
               variant="underlined"
               density="compact"
               :disabled="!isEditing"
               placeholder="No date recorded"
+              v-if="isEditing"
             />
           </v-col>
 
