@@ -1,12 +1,16 @@
 import { usePatientStore } from '@/stores/patient'
 import { useAuthStore } from '@/stores/auth'
-import { computed, onMounted, watch, nextTick } from 'vue'
+import { useMedicalHistoryStore } from '@/stores/medicalHistory'
+import { computed, onMounted, watch, nextTick, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 export const usePatientInfo = (patient_id = null) => {
   const patientStore = usePatientStore()
   const authStore = useAuthStore()
+  const medicalHistoryStore = useMedicalHistoryStore()
   const route = useRoute()
+
+  const medicalHistory = ref(null)
 
   const currentPatientId = computed(() => {
     return patient_id || route.params.id || route.params.patient_id || route.query.patient_id
@@ -20,33 +24,25 @@ export const usePatientInfo = (patient_id = null) => {
   watch(
     currentPatientId,
     async (newPatientId) => {
-      console.log('Loading patient with ID:', newPatientId)
-
       if (newPatientId) {
-        // Try to find in store first
         const foundPatient = patientStore.setCurrentPatient(newPatientId)
 
-        // If not found in store, fetch from database
         if (!foundPatient) {
-          console.log('Patient not in store, fetching from database...')
-
           try {
-            const result = await patientStore.fetchPatientById(newPatientId)
-
-            // Ensure Vue reactivity updates
+            await patientStore.fetchPatientById(newPatientId)
+            await medicalHistoryStore.getMedicalHistoryByPatientId(newPatientId)
+            medicalHistory.value = medicalHistoryStore.medicalHistories[0] || null
             await nextTick()
-
-            console.log('Patient after fetch and nextTick:', patientStore.currentPatient)
-
-            if (result?.error) {
-              console.log('Database fetch error:', result.error)
-            }
           } catch (error) {
-            console.log('Fetch patient error:', error)
+            console.error('Error fetching patient:', error)
           }
+        } else {
+          await medicalHistoryStore.getMedicalHistoryByPatientId(newPatientId)
+          medicalHistory.value = medicalHistoryStore.medicalHistories[0] || null
         }
       } else {
         patientStore.clearCurrentPatient()
+        medicalHistory.value = null
       }
     },
     { immediate: true },
@@ -59,10 +55,20 @@ export const usePatientInfo = (patient_id = null) => {
     }
   })
 
+  // Method to refresh medical history
+  const refreshMedicalHistory = async () => {
+    if (currentPatientId.value) {
+      await medicalHistoryStore.getMedicalHistoryByPatientId(currentPatientId.value)
+      medicalHistory.value = medicalHistoryStore.medicalHistories[0] || null
+    }
+  }
+
   return {
     isLoading,
     isDoctor,
     patientInfo,
     currentPatientId,
+    medicalHistory,
+    refreshMedicalHistory,
   }
 }

@@ -5,7 +5,14 @@ import DemographicsWidget from './partials/DemographicsWidget.vue'
 import AdmissionDetailsWidget from './partials/AdmissionDetailsWidget.vue'
 import MedicalHistoryWidget from './partials/MedicalHistoryWidget.vue'
 
-const { patientInfo, isLoading, isDoctor } = usePatientInfo()
+const {
+  patientInfo,
+  isLoading,
+  isDoctor,
+  currentPatientId,
+  medicalHistory,
+  refreshMedicalHistory,
+} = usePatientInfo()
 
 // Status colors following MediClear patient workflow
 const statusColors = {
@@ -13,6 +20,12 @@ const statusColors = {
   Approved: 'green',
   Released: 'grey',
   Admitted: 'blue',
+}
+
+// Handle medical history added - refresh medical history data
+const handleMedicalHistoryAdded = async () => {
+  console.log('Medical history added, refreshing medical history data...')
+  await refreshMedicalHistory()
 }
 </script>
 
@@ -93,7 +106,11 @@ const statusColors = {
           </v-col>
 
           <v-col cols="12" lg="6">
-            <MedicalHistoryWidget :medical_history="patientInfo.medical_history" />
+            <MedicalHistoryWidget
+              :patient-id="currentPatientId"
+              :medical_history="medicalHistory"
+              @added="handleMedicalHistoryAdded"
+            />
           </v-col>
         </v-row>
       </template>
