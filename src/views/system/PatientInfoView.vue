@@ -4,6 +4,9 @@ import { usePatientInfo } from './partials/patientInfo'
 import DemographicsWidget from './partials/DemographicsWidget.vue'
 import AdmissionDetailsWidget from './partials/AdmissionDetailsWidget.vue'
 import MedicalHistoryWidget from './partials/MedicalHistoryWidget.vue'
+import BillingWidget from './partials/BillingWidget.vue'
+import DiagnosisWidget from './partials/DiagnosisWidget.vue'
+import VitalSignsWidget from './partials/VitalSignsWidget.vue'
 
 const {
   patientInfo,
@@ -11,7 +14,13 @@ const {
   isDoctor,
   currentPatientId,
   medicalHistory,
+  billing,
+  diagnosis,
+  vitalSigns,
   refreshMedicalHistory,
+  refreshBilling,
+  refreshDiagnosis,
+  refreshVitalSigns,
 } = usePatientInfo()
 
 // Status colors following MediClear patient workflow
@@ -22,10 +31,20 @@ const statusColors = {
   Admitted: 'blue',
 }
 
-// Handle medical history added - refresh medical history data
 const handleMedicalHistoryAdded = async () => {
-  console.log('Medical history added, refreshing medical history data...')
   await refreshMedicalHistory()
+}
+
+const handleBillingAdded = async () => {
+  await refreshBilling()
+}
+
+const handleDiagnosisAdded = async () => {
+  await refreshDiagnosis()
+}
+
+const handleVitalSignsAdded = async () => {
+  await refreshVitalSigns()
 }
 </script>
 
@@ -112,20 +131,32 @@ const handleMedicalHistoryAdded = async () => {
               @added="handleMedicalHistoryAdded"
             />
           </v-col>
+
+          <v-col cols="12" lg="6">
+            <DiagnosisWidget
+              :patient-id="currentPatientId"
+              :diagnosis="diagnosis"
+              @added="handleDiagnosisAdded"
+            />
+          </v-col>
+
+          <v-col cols="12" lg="6">
+            <BillingWidget
+              :patient-id="currentPatientId"
+              :billing="billing"
+              @added="handleBillingAdded"
+            />
+          </v-col>
+
+          <v-col cols="12" lg="6">
+            <VitalSignsWidget
+              :patient-id="currentPatientId"
+              :vital-signs="vitalSigns"
+              @added="handleVitalSignsAdded"
+            />
+          </v-col>
         </v-row>
       </template>
-
-      <!-- Error/No Patient State -->
-      <!-- <v-row v-else>
-        <v-col cols="12" class="text-center py-8">
-          <v-icon size="64" color="error">mdi-alert-circle-outline</v-icon>
-          <div class="text-h6 mt-4">Patient Not Found</div>
-          <div class="text-body-2 text-medium-emphasis mt-2">
-            Patient ID: {{ currentPatientId }}
-          </div>
-          <v-btn @click="refreshPatientInfo" class="mt-4">Refresh</v-btn>
-        </v-col>
-      </v-row> -->
     </template>
   </AppLayout>
 </template>
