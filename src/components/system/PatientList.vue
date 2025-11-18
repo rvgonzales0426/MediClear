@@ -46,7 +46,8 @@ onMounted(async () => {
   await authStore.getUserInformation()
   const userRole = authStore.userData?.role
   const userId = authStore.userData?.id
-  await patientStore.fetchPatients(userRole, userId)
+  // Pass true as third parameter to fetch ALL patients regardless of role
+  await patientStore.fetchPatients(userRole, userId, true)
 })
 
 const viewPatientInfo = (patient_id) => {

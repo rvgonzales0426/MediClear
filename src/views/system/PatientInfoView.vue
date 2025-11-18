@@ -7,8 +7,10 @@ import MedicalHistoryWidget from './partials/MedicalHistoryWidget.vue'
 import BillingWidget from './partials/BillingWidget.vue'
 import DiagnosisWidget from './partials/DiagnosisWidget.vue'
 import VitalSignsWidget from './partials/VitalSignsWidget.vue'
+import { computed } from 'vue'
 
 const {
+  authStore,
   patientInfo,
   isLoading,
   isDoctor,
@@ -22,6 +24,11 @@ const {
   refreshDiagnosis,
   refreshVitalSigns,
 } = usePatientInfo()
+
+const isAssignedDoctor = computed(() => {
+  // Check if current patient is assigned to the logged-in doctor
+  return patientInfo.value && patientInfo.value.attending_doctor_id === authStore.userData?.id
+})
 
 // Status colors following MediClear patient workflow
 const statusColors = {
@@ -88,7 +95,7 @@ const handleVitalSignsAdded = async () => {
               <v-col
                 cols="12"
                 md="5"
-                v-if="isDoctor && patientInfo.status === 'Discharge Requested'"
+                v-if="isDoctor && patientInfo.status === 'Discharge Requested' && isAssignedDoctor"
               >
                 <div class="d-flex flex-column flex-sm-row ga-2 justify-md-end">
                   <v-btn

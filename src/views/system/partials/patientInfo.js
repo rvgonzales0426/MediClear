@@ -105,6 +105,8 @@ export const usePatientInfo = (patient_id = null) => {
   }
 
   return {
+    patientStore,
+    authStore,
     isLoading,
     isDoctor,
     patientInfo,

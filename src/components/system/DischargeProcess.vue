@@ -1,20 +1,41 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { usePatientStore } from '@/stores/patient'
 import { useDischargeWorkflow } from '@/composables/useDischargeWorkflow'
+import { useAuthStore } from '@/stores/auth'
+import PaginationComponent from '@/components/PaginationComponent.vue'
 
 // Load patient store following MediClear pattern
 const patientStore = usePatientStore()
+const authStore = useAuthStore()
 
 // Use discharge workflow composable
 const { statusColors, workflowRows, workflowItems, patientWorkflowData, workflowMetrics } =
   useDischargeWorkflow()
 
+// Pagination
+const itemsPerPage = 10
+const currentPage = ref(1)
+
+// Computed property for total pages
+const totalPage = computed(() => {
+  return Math.ceil(patientWorkflowData.value.length / itemsPerPage)
+})
+
+// Computed property for paginated workflow data
+const paginatedWorkflowData = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return patientWorkflowData.value.slice(start, end)
+})
+
 // Fetch patients on component mount
 onMounted(async () => {
-  if (!patientStore.patients || patientStore.patients.length === 0) {
-    await patientStore.fetchPatients()
-  }
+  await authStore.getUserInformation()
+  const userRole = authStore.userData?.role
+  const userId = authStore.userData?.id
+  // Fetch all patients for discharge workflow tracking
+  await patientStore.fetchPatients(userRole, userId, true)
 })
 </script>
 
@@ -98,7 +119,7 @@ onMounted(async () => {
                   <div class="text-body-2 mt-2">Loading patient data...</div>
                 </td>
               </tr>
-              <tr v-else v-for="data in patientWorkflowData" :key="data.patient_id">
+              <tr v-else v-for="data in paginatedWorkflowData" :key="data.patient_id">
                 <td>{{ data.patient_name }}</td>
                 <td>{{ data.case_number }}</td>
                 <td>
@@ -139,6 +160,8 @@ onMounted(async () => {
       </v-card>
     </v-col>
   </v-row>
+
+  <PaginationComponent v-model="currentPage" :totalPage="totalPage" />
 
   <v-row class="my-5">
     <v-col v-for="metric in workflowMetrics" :key="metric.title" cols="12" lg="4" md="4">

@@ -38,7 +38,8 @@ onMounted(async () => {
   await authStore.getUserInformation()
   const userRole = authStore.userData?.role
   const userId = authStore.userData?.id
-  await patientStore.fetchPatients(userRole, userId)
+  // Pass true as third parameter to fetch ALL patients for reports (regardless of doctor assignment)
+  await patientStore.fetchPatients(userRole, userId, true)
 })
 </script>
 
@@ -138,39 +139,39 @@ onMounted(async () => {
 
         <!-- Charts -->
         <v-row>
-          <v-col cols="12" md="6">
+          <v-col cols="12" lg="6">
             <ChartCard
               title="Patients by Status"
               :chart-data="statusChartData"
               chart-type="doughnut"
-              :height="300"
+              :height="350"
             />
           </v-col>
-          <v-col cols="12" md="6">
+          <v-col cols="12" lg="6">
             <ChartCard
               title="Patients by Ward"
               :chart-data="wardChartData"
               chart-type="bar"
-              :height="300"
+              :height="350"
             />
           </v-col>
         </v-row>
 
         <v-row>
-          <v-col cols="12" md="6">
+          <v-col cols="12" lg="6">
             <ChartCard
               title="Patients by Gender"
               :chart-data="genderChartData"
               chart-type="pie"
-              :height="300"
+              :height="350"
             />
           </v-col>
-          <v-col cols="12" md="6">
+          <v-col cols="12" lg="6">
             <ChartCard
               title="Admissions Over Time"
               :chart-data="monthlyChartData"
               chart-type="line"
-              :height="300"
+              :height="350"
             />
           </v-col>
         </v-row>

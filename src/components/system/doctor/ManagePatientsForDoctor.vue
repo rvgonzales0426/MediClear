@@ -5,7 +5,6 @@ import PatientActionTable from './PatientActionTable.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 import { useManagePatientsForDoctor } from './managePatientsForDoctor'
-import { usePatientStore } from '@/stores/patient'
 import { toast } from 'vue3-toastify'
 
 import { useRouter } from 'vue-router'
@@ -114,12 +113,12 @@ const handleReject = async (patient_id) => {
     </v-col>
   </v-row>
 
-  <!-- Discharge Action Table -->
-  <v-row>
+  <!-- Discharge Action Table - Only show when there are pending requests -->
+  <v-row v-if="dischargingPatients.length > 0">
     <v-col cols="12" lg="12" md="10">
       <v-card
         title="Discharge Requests Awaiting Approval"
-        subtitle="Discharge Requests Awaiting Approval"
+        subtitle="Review and approve patient discharge requests"
       >
         <v-card-text>
           <PatientActionTable
