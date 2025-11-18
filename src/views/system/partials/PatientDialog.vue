@@ -86,7 +86,7 @@ const patientStatus = [
 ]
 
 const wardOptions = [
-  { title: 'General Medicine', value: 'genera medicine' },
+  { title: 'General Medicine', value: 'general medicine' },
   { title: 'Cardiology', value: 'cardiology' },
   { title: 'Emergency', value: 'emergency' },
   { title: 'Orthopedics', value: 'orthopedics' },
