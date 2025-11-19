@@ -168,6 +168,7 @@ const wardOptions = [
                 type="text"
                 v-model="formData.age_gender"
                 :rules="[requiredValidator]"
+                placeholder="Ex.20/F or 20/M"
               />
             </v-col>
 
