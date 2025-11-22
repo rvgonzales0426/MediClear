@@ -1,12 +1,17 @@
 <script setup>
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { emailValidator, passwordValidator } from '@/utils/validators.js'
+import { supabase } from '@/composables/useSupabase'
 
-const router = useRouter()
 const authStore = useAuthStore()
 
+// Reactive state
+const router = useRouter()
+const route = useRoute()
+
+// Reactive state
 const state = reactive({
   isPasswordVisible: false,
   isLoading: false,
@@ -26,50 +31,40 @@ const formData = ref({
 const refVForm = ref()
 
 const onSubmit = async () => {
-  try {
-    state.isLoading = true
-    state.errorMessage = ''
-    state.successMessage = ''
+  state.isLoading = true
 
-    // Use store's login method
-    const { data, error } = await authStore.loginUser(formData.value.email, formData.value.password)
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: formData.value.email,
+    password: formData.value.password,
+  })
 
-    if (error) {
-      state.errorMessage = error.message || 'Login failed'
-      return
+  if (error) {
+    state.errorMessage = error.message || 'Error Logging In'
+    state.isLoading = false
+  } else if (data) {
+    state.successMessage = 'Login Successfully'
+
+    await authStore.getUserInformation()
+    refVForm.value?.reset()
+
+    // Check if there's a redirect query parameter
+    const redirectPath = route.query.redirect
+
+    if (redirectPath) {
+      // Redirect to the intended destination
+      router.replace(redirectPath)
+    } else {
+      // Default dashboard redirect based on role
+      router.replace(
+        authStore.userData?.role === 'nurse' ? '/nurse-dashboard' : '/doctor-dashboard',
+      )
     }
 
-    if (data?.user) {
-      state.successMessage = 'Login successful!'
-      refVForm.value?.reset()
-
-      // Redirect based on user role from store
-      const role = authStore.userData?.role
-      await redirectBasedOnRole(role)
-    }
-  } catch (err) {
-    state.errorMessage = err.message || 'An error occurred'
-    console.error('Login error:', err)
-  } finally {
     state.isLoading = false
   }
 }
 
-// Function to handle role-based redirection
-const redirectBasedOnRole = async (role) => {
-  const routes = {
-    admin: '/admin-dashboard',
-    doctor: '/doctor-dashboard',
-    nurse: '/nurse-dashboard',
-    billing_clerk: '/billing-dashboard',
-    philhealth_officer: '/philhealth-dashboard',
-  }
-
-  const targetRoute = routes[role] || '/dashboard'
-  await router.replace(targetRoute)
-}
-
-// Trigger Validators
+//Trigger Validators
 const onFormSubmit = () => {
   refVForm.value?.validate().then(({ valid }) => {
     if (valid) onSubmit()
@@ -88,7 +83,6 @@ const onFormSubmit = () => {
           prepend-inner-icon="mdi-email-outline"
           placeholder="Enter your registered email"
           :rules="[emailValidator]"
-          autocomplete="email"
         />
       </v-col>
 
@@ -99,34 +93,20 @@ const onFormSubmit = () => {
           :type="state.isPasswordVisible ? 'text' : 'password'"
           prepend-inner-icon="mdi-lock-outline"
           @click:append-inner="state.isPasswordVisible = !state.isPasswordVisible"
-          :append-inner-icon="state.isPasswordConfirmVisible ? 'mdi-eye' : 'mdi-eye-off'"
+          :append-inner-icon="state.isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
           placeholder="Enter your password"
           :rules="[passwordValidator]"
-          autocomplete="current-password"
         />
       </v-col>
     </v-row>
 
     <!-- Message Alert -->
-    <v-alert
-      v-if="state.errorMessage"
-      type="error"
-      density="compact"
-      class="mb-4"
-      closable
-      @click:close="state.errorMessage = ''"
-    >
+    <v-alert v-if="state.errorMessage" color="error" density="compact" class="mb-4">
       {{ state.errorMessage }}
     </v-alert>
 
-    <v-alert
-      v-if="state.successMessage"
-      type="success"
-      density="compact"
-      class="mb-4"
-      closable
-      @click:close="state.successMessage = ''"
-    >
+    <!-- Message Alert -->
+    <v-alert v-if="state.successMessage" color="success" density="compact" class="mb-4">
       {{ state.successMessage }}
     </v-alert>
 

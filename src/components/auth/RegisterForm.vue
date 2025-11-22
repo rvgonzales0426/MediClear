@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
+import { supabase } from '@/composables/useSupabase'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth.js'
 import {
   emailValidator,
   passwordValidator,
@@ -9,9 +9,6 @@ import {
   requiredValidator,
   integerValidator,
 } from '@/utils/validators.js'
-
-const router = useRouter()
-const authStore = useAuthStore()
 
 // Reactive state
 const state = reactive({
@@ -34,7 +31,10 @@ const formDataDefault = {
 }
 
 const refVForm = ref()
+
 const formData = ref({ ...formDataDefault })
+
+const router = useRouter()
 
 // Constants
 const ROLES = [
@@ -42,30 +42,39 @@ const ROLES = [
   { title: 'Doctor', value: 'doctor' },
 ]
 
-// Form submission
 const onSubmit = async () => {
-  const metadata = {
-    firstname: formData.value.first_name,
-    lastname: formData.value.last_name,
-    role: formData.value.role,
-    phone_number: formData.value.phone_number,
+  state.isLoading = true
+
+  const { data, error } = await supabase.auth.signUp({
+    email: formData.value.email,
+    password: formData.value.password,
+    options: {
+      data: {
+        first_name: formData.value.first_name,
+        last_name: formData.value.last_name,
+        full_name: `${formData.value.first_name} ${formData.value.last_name}`,
+        phone_number: formData.value.phone_number,
+        role: formData.value.role,
+      },
+    },
+  })
+
+  if (error) {
+    state.errorMessage = error.message
+    state.isLoading = false
+    return
   }
 
-  const { data, error: signUpError } = await signUp(
-    formData.value.email,
-    formData.value.password,
-    metadata,
-  )
-
-  if (!signUpError && data) {
+  if (data?.user) {
     state.successMessage = 'Registered Successfully'
+    state.isLoading = false
     // Reset Form
     refVForm.value?.reset()
     router.replace(formData.value.role === 'nurse' ? '/nurse-dashboard' : '/doctor-dashboard')
   }
 }
 
-// Trigger Validators
+//Trigger Validators
 const onFormSubmit = () => {
   refVForm.value?.validate().then(({ valid }) => {
     if (valid) onSubmit()

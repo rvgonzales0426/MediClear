@@ -1,18 +1,20 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { useSupabase } from '@/composables/useSupabase'
-import { usePatientOperations } from '@/composables/usePatientOperations'
+import { ref, computed, nextTick } from 'vue'
+import { supabase } from '@/composables/useSupabase'
 
 export const usePatientStore = defineStore('patient', () => {
-  const { fetchData, updateData, deleteData } = useSupabase()
-  const { addPatient: addPatientOperation } = usePatientOperations()
-
   // State
   const patients = ref([])
-  const loading = ref(false)
-  const error = ref(null)
+  const currentPatient = ref(null)
+  const isLoading = ref(false)
 
-  // Computed
+  const $reset = () => {
+    patients.value = []
+    currentPatient.value = null
+    isLoading.value = false
+  }
+
+  // Computed Properties
   const totalPatients = computed(() => patients.value.length)
 
   const pendingDischarge = computed(
@@ -32,133 +34,139 @@ export const usePatientStore = defineStore('patient', () => {
   )
 
   // Actions
-  const fetchPatients = async (options = {}) => {
-    try {
-      loading.value = true
-      error.value = null
+  const fetchPatients = async (userRole = null, userId = null, allPatients = false) => {
+    isLoading.value = true
 
-      const defaultOptions = {
-        order: { column: 'created_at', ascending: false },
-        ...options,
+    // Fetch all patients - RLS will automatically filter based on user role
+    // Doctors will only see their own patients, nurses will see all patients
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching patients:', error)
+    }
+
+    if (data) {
+      console.log('Fetched patients from database:', data.length, 'patients')
+
+      // Client-side safeguard: If RLS fails, filter on client
+      // But if allPatients is true, skip filtering (for Patient List page)
+      if (userRole === 'doctor' && userId && !allPatients) {
+        const filteredPatients = data.filter((p) => p.attending_doctor_id === userId)
+        console.log('Client-side filtered for doctor:', filteredPatients.length, 'patients')
+
+        if (data.length !== filteredPatients.length) {
+          console.warn(
+            '⚠️ RLS NOT WORKING! Server returned',
+            data.length,
+            'but should be',
+            filteredPatients.length,
+          )
+          console.warn('Applying client-side filter as safeguard')
+          patients.value = filteredPatients
+        } else {
+          console.log('✅ RLS working correctly')
+          patients.value = data
+        }
+      } else {
+        patients.value = data
       }
 
-      const { data, error: fetchError } = await fetchData('patients', defaultOptions)
+      isLoading.value = false
+    }
+  }
 
-      if (fetchError) throw fetchError
+  // New: Fetch single patient details
+  const fetchPatientById = async (patientId) => {
+    console.log('Fetching patient from database:', patientId)
+    isLoading.value = true
 
-      patients.value = data || []
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('patient_id', patientId)
+      .single()
+
+    isLoading.value = false
+
+    if (error) {
+      console.log(error, 'Error fetching patient details')
+      currentPatient.value = null // This should trigger reactivity
+      return { data: null, error }
+    } else {
+      console.log('Patient fetched successfully:', data)
+      currentPatient.value = data // This should trigger reactivity
+
+      // Force reactivity update
+      await nextTick()
+
       return { data, error: null }
-    } catch (err) {
-      error.value = err.message
-      patients.value = []
-      return { data: null, error: err }
-    } finally {
-      loading.value = false
     }
   }
-
-  const addPatient = async (patientData) => {
-    try {
-      loading.value = true
-      error.value = null
-
-      const result = await addPatientOperation(patientData)
-
-      if (result.success && result.data) {
-        // Add the new patient to the list (prepend to show at top)
-        patients.value.unshift(result.data[0])
-        return { success: true, data: result.data }
-      }
-
-      error.value = result.error
-      return { success: false, error: result.error }
-    } catch (err) {
-      error.value = err.message
-      return { success: false, error: err.message }
-    } finally {
-      loading.value = false
+  // New: Set current patient from existing patients array
+  const setCurrentPatient = (patientId) => {
+    const patient = patients.value.find((p) => p.patient_id === patientId)
+    if (patient) {
+      currentPatient.value = patient
+      return patient
     }
+    console.log('Patient not found in store:', patientId) // MediClear pattern: log errors
+    currentPatient.value = null
+    return null
   }
 
-  const updatePatient = async (patientId, updates) => {
-    try {
-      loading.value = true
-      error.value = null
+  // New: Clear current patient
+  const clearCurrentPatient = () => {
+    currentPatient.value = null
+  }
 
-      const { updateData } = useSupabase()
-      const { data, error: updateError } = await updateData('patients', patientId, updates)
+  //Add Patients
+  const addPatient = async (formData) => {
+    return await supabase.from('patients').insert(formData).select()
+  }
 
-      if (updateError) throw updateError
-
-      // Update local state
-      const index = patients.value.findIndex((p) => p.id === patientId)
-      if (index !== -1 && data?.[0]) {
-        patients.value[index] = data[0]
-      }
-
-      return { success: true, data }
-    } catch (err) {
-      error.value = err.message
-      return { success: false, error: err.message }
-    } finally {
-      loading.value = false
-    }
+  //Update Patient
+  const updatePatient = async (formData) => {
+    return await supabase
+      .from('patients')
+      .update(formData)
+      .eq('patient_id', formData.patient_id)
+      .select()
   }
 
   const deletePatient = async (patientId) => {
-    try {
-      loading.value = true
-      error.value = null
+    const { error } = await supabase.from('patients').delete().eq('id', patientId)
 
-      const { deleteData } = useSupabase()
-      const { error: deleteError } = await deleteData('patients', patientId)
-
-      if (deleteError) throw deleteError
-
-      // Remove from local state
-      patients.value = patients.value.filter((p) => p.id !== patientId)
-
-      return { success: true }
-    } catch (err) {
-      error.value = err.message
-      return { success: false, error: err.message }
-    } finally {
-      loading.value = false
-    }
+    if (error) return
   }
 
   const getPatientById = (patientId) => {
     return patients.value.find((p) => p.id === patientId)
   }
 
-  const clearError = () => {
-    error.value = null
-  }
-
-  const resetStore = () => {
-    patients.value = []
-    loading.value = false
-    error.value = null
-  }
-
   return {
     // State
+    isLoading,
     patients,
-    loading,
-    error,
     // Computed
     totalPatients,
     pendingDischarge,
     approvedPatients,
     releasedPatients,
     admittedPatients,
+    currentPatient,
+
     // Actions
     fetchPatients,
+    fetchPatientById,
+    setCurrentPatient,
+    clearCurrentPatient,
     addPatient,
     updatePatient,
     deletePatient,
     getPatientById,
-    clearError,
-    resetStore,
+    $reset,
   }
 })
