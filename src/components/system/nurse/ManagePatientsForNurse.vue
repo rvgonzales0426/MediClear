@@ -8,10 +8,12 @@ import { useAuthStore } from '@/stores/auth'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
+import { usePatientSearch } from '@/composables/usePatientSearch'
 
 const router = useRouter()
 const patientStore = usePatientStore()
 const authStore = useAuthStore()
+const { paginatedPatients, currentPage, totalPage } = usePatientSearch()
 
 // Load patients on component mount
 onMounted(async () => {
@@ -55,22 +57,6 @@ const stats = computed(() => {
       icon: 'mdi-exit-to-app',
     },
   ]
-})
-
-//Pagination
-const itemsPerPage = 10
-const currentPage = ref(1)
-
-// Computed property for total pages
-const totalPage = computed(() => {
-  return Math.ceil(patientStore.totalPatients / itemsPerPage)
-})
-
-// Computed property for paginated patients
-const paginatedPatients = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return patientStore.patients.slice(start, end)
 })
 
 const isDialogVisible = ref(false)

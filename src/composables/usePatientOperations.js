@@ -24,7 +24,15 @@ export const usePatientOperations = (props, emits) => {
     addmission_date: null,
     status: 'Admitted',
     attending_doctor_id: null,
-    attending_doctor_name: '',
+    attending_doctor_name: null,
+    phone_number: null,
+    address: null,
+    date_of_birth: null,
+    emergency_contact_phone: null,
+    emergency_contact_name: null,
+    room_number: null,
+    ward: null,
+    bed_number: null,
   }
 
   const formData = ref({
@@ -55,14 +63,7 @@ export const usePatientOperations = (props, emits) => {
     // Debug: Log the submission data
     console.log('Submitting patient data:', {
       attending_doctor_id: submissionData.attending_doctor_id,
-      attending_doctor_name: submissionData.attending_doctor_name,
     })
-
-    // Ensure attending_doctor_name is set if attending_doctor_id exists
-    if (!submissionData.attending_doctor_name && submissionData.attending_doctor_id) {
-      console.warn('⚠️ attending_doctor_name is missing but attending_doctor_id exists!')
-      console.warn('formData:', formData.value)
-    }
 
     const { data, error } = isUpdate.value
       ? await patientStore.updatePatient(submissionData)
@@ -72,7 +73,7 @@ export const usePatientOperations = (props, emits) => {
       console.error('Error submitting patient data:', error.message)
       // Handle error (e.g., show notification to user)
 
-      toast.error(error.message, { position: 'top-center' })
+      toast.error('An Error Occured', { position: 'top-center' })
       formAction.value.formProccess = false
       return
     } else if (data) {

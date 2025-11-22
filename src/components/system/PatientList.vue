@@ -4,6 +4,7 @@ import { usePatientStore } from '@/stores/patient'
 import { useAuthStore } from '@/stores/auth'
 import PaginationComponent from '../PaginationComponent.vue'
 import PatientDialog from '@/views/system/partials/PatientDialog.vue'
+import { usePatientSearch } from '@/composables/usePatientSearch'
 import dayjs from 'dayjs'
 
 import { useRouter } from 'vue-router'
@@ -22,21 +23,19 @@ const statusColor = {
   Admitted: 'blue',
 }
 
-//Pagination
-const itemsPerPage = 10
-const currentPage = ref(1)
-
-// Computed property for total pages
-const totalPage = computed(() => {
-  return Math.ceil(patientStore.totalPatients / itemsPerPage)
-})
-
-// Computed property for paginated patients
-const paginatedPatients = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return patientStore.patients.slice(start, end)
-})
+const {
+  paginatedPatients,
+  currentPage,
+  totalPage,
+  searchQuery,
+  selectedStatus,
+  statusOptions,
+  selectedWard,
+  filteredPatients,
+  wardOptions,
+  clearFilters,
+  resetPagination,
+} = usePatientSearch()
 
 const onUpdate = (patient) => {
   patientData.value = patient
@@ -47,7 +46,8 @@ onMounted(async () => {
   await authStore.getUserInformation()
   const userRole = authStore.userData?.role
   const userId = authStore.userData?.id
-  await patientStore.fetchPatients(userRole, userId)
+  // Pass true as third parameter to fetch ALL patients regardless of role
+  await patientStore.fetchPatients(userRole, userId, true)
 })
 
 const viewPatientInfo = (patient_id) => {
@@ -68,40 +68,53 @@ const viewPatientInfo = (patient_id) => {
       <v-row>
         <v-col cols="12" lg="3" md="4">
           <v-text-field
+            v-model="searchQuery"
             label="Search by name or case number..."
             variant="outlined"
             density="compact"
+            clearable
             prepend-inner-icon="mdi-magnify"
+            @update:model-value="resetPagination"
           />
         </v-col>
 
         <v-col cols="12" lg="3" md="4">
           <v-select
+            v-model="selectedStatus"
             variant="outlined"
             density="compact"
             label="Selec Status"
-            :items="['All Statuses', 'Admitted', 'Discharge Requested', 'Approved', 'Released']"
+            :items="statusOptions"
+            @update:model-value="resetPagination"
           />
         </v-col>
 
         <v-col cols="12" lg="3" md="4">
           <v-select
+            v-model="selectedWard"
             variant="outlined"
             density="compact"
             label="Select Ward"
-            :items="[
-              'All Wards',
-              'General Medicine',
-              'Cardiology',
-              'Emergency',
-              'Orthopedics',
-              'Maternity',
-            ]"
+            :items="wardOptions"
+            @update:model-value="resetPagination"
           />
         </v-col>
 
         <v-col cols="12" lg="3" md="4">
-          <v-btn prepend-icon="mdi-filter-outline" block ripple>Clear Filters</v-btn>
+          <v-btn prepend-icon="mdi-filter-outline" block ripple @click="clearFilters"
+            >Clear Filters</v-btn
+          >
+        </v-col>
+      </v-row>
+
+      <!-- Results count -->
+      <v-row
+        v-if="searchQuery || selectedStatus !== 'All Statuses' || selectedWard !== 'All Wards'"
+      >
+        <v-col cols="12">
+          <v-chip color="primary" variant="outlined" size="small">
+            {{ filteredPatients.length }} result{{ filteredPatients.length !== 1 ? 's' : '' }} found
+          </v-chip>
         </v-col>
       </v-row>
     </v-card-text>

@@ -2,7 +2,7 @@
 import { onMounted, watch } from 'vue'
 import { usePatientOperations } from '@/composables/usePatientOperations'
 import { useDoctors } from '@/composables/useDoctors'
-import { requiredValidator } from '@/utils/validators'
+import { requiredValidator, phPhoneValidator } from '@/utils/validators'
 
 const props = defineProps({
   isDialogVisible: {
@@ -35,14 +35,11 @@ onMounted(async () => {
 watch(
   () => props.patientData,
   (newPatientData) => {
-    if (newPatientData && newPatientData.attending_doctor_id && doctors.value.length > 0) {
-      // If editing and doctor name is missing, populate it from doctors list
-      if (!newPatientData.attending_doctor_name) {
-        const doctor = doctors.value.find((d) => d.id === newPatientData.attending_doctor_id)
-        if (doctor) {
-          formData.value.attending_doctor_name = doctor.full_name || doctor.email
-        }
-      }
+    if (!newPatientData && !newPatientData?.attending_doctor_id && doctors.value.length <= 0) return
+    // If editing and doctor name is missing, populate it from doctors list
+    if (!newPatientData.attending_doctor_name) {
+      const doctor = doctors.value.find((d) => d.id === newPatientData.attending_doctor_id)
+      if (doctor) formData.value.attending_doctor_name = doctor.full_name || doctor.email
     }
   },
   { immediate: true },
@@ -87,6 +84,14 @@ const patientStatus = [
     value: 'Released',
   },
 ]
+
+const wardOptions = [
+  { title: 'General Medicine', value: 'general medicine' },
+  { title: 'Cardiology', value: 'cardiology' },
+  { title: 'Emergency', value: 'emergency' },
+  { title: 'Orthopedics', value: 'orthopedics' },
+  { title: 'Maternity', value: 'matternity' },
+]
 </script>
 
 <template>
@@ -97,6 +102,14 @@ const patientStatus = [
           <v-row>
             <v-col cols="12">
               <v-text-field
+                label="Patient Name"
+                type="text"
+                v-model="formData.patient_name"
+                :rules="[requiredValidator]"
+              />
+            </v-col>
+            <v-col cols="6">
+              <v-text-field
                 label="Case Number"
                 type="number"
                 v-model="formData.case_number"
@@ -104,11 +117,47 @@ const patientStatus = [
               />
             </v-col>
 
-            <v-col cols="12">
+            <v-col cols="6">
               <v-text-field
-                label="Patient Name"
+                label="Phone number"
+                type="number"
+                v-model="formData.phone_number"
+                :rules="[requiredValidator, phPhoneValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Emergency Contact Name"
                 type="text"
-                v-model="formData.patient_name"
+                v-model="formData.emergency_contact_name"
+                :rules="[requiredValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Emergency Contact Number"
+                type="number"
+                v-model="formData.emergency_contact_phone"
+                :rules="[requiredValidator, phPhoneValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Room Number"
+                type="text"
+                v-model="formData.room_number"
+                :rules="[requiredValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Bed Number"
+                type="text"
+                v-model="formData.bed_number"
                 :rules="[requiredValidator]"
               />
             </v-col>
@@ -119,16 +168,46 @@ const patientStatus = [
                 type="text"
                 v-model="formData.age_gender"
                 :rules="[requiredValidator]"
+                placeholder="Ex.20/F or 20/M"
               />
             </v-col>
 
-            <v-col cols="6 ">
+            <v-col cols="6">
               <v-select
                 label="Status"
                 v-model="formData.status"
                 :items="patientStatus"
-                :tile="patientStatus.title"
+                :title="patientStatus.title"
                 :value="patientStatus.value"
+                :rules="[requiredValidator]"
+              ></v-select>
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Adress"
+                type="text"
+                v-model="formData.address"
+                :rules="[requiredValidator]"
+              ></v-text-field>
+            </v-col>
+
+            <v-col cols="6">
+              <v-date-input
+                label="Date of Birth"
+                fprmat="yyyy/MM/dd"
+                v-model="formData.date_of_birth"
+                :rules="[requiredValidator]"
+              />
+            </v-col>
+
+            <v-col cols="12">
+              <v-select
+                label="Ward"
+                v-model="formData.ward"
+                :items="wardOptions"
+                :title="wardOptions.title"
+                :value="wardOptions.value"
                 :rules="[requiredValidator]"
               ></v-select>
             </v-col>

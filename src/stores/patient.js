@@ -34,7 +34,7 @@ export const usePatientStore = defineStore('patient', () => {
   )
 
   // Actions
-  const fetchPatients = async (userRole = null, userId = null) => {
+  const fetchPatients = async (userRole = null, userId = null, allPatients = false) => {
     isLoading.value = true
 
     // Fetch all patients - RLS will automatically filter based on user role
@@ -52,7 +52,8 @@ export const usePatientStore = defineStore('patient', () => {
       console.log('Fetched patients from database:', data.length, 'patients')
 
       // Client-side safeguard: If RLS fails, filter on client
-      if (userRole === 'doctor' && userId) {
+      // But if allPatients is true, skip filtering (for Patient List page)
+      if (userRole === 'doctor' && userId && !allPatients) {
         const filteredPatients = data.filter((p) => p.attending_doctor_id === userId)
         console.log('Client-side filtered for doctor:', filteredPatients.length, 'patients')
 
