@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { emailValidator, passwordValidator } from '@/utils/validators.js'
 import { supabase } from '@/composables/useSupabase'
@@ -9,6 +9,7 @@ const authStore = useAuthStore()
 
 // Reactive state
 const router = useRouter()
+const route = useRoute()
 
 // Reactive state
 const state = reactive({
@@ -45,7 +46,21 @@ const onSubmit = async () => {
 
     await authStore.getUserInformation()
     refVForm.value?.reset()
-    router.replace(authStore.userData?.role === 'nurse' ? '/nurse-dashboard' : 'doctor-dashboard') //Check role from session
+
+    // Check if there's a redirect query parameter
+    const redirectPath = route.query.redirect
+
+    if (redirectPath) {
+      // Redirect to the intended destination
+      router.replace(redirectPath)
+    } else {
+      // Default dashboard redirect based on role
+      router.replace(
+        authStore.userData?.role === 'nurse' ? '/nurse-dashboard' : '/doctor-dashboard',
+      )
+    }
+
+    state.isLoading = false
   }
 }
 

@@ -61,7 +61,10 @@ const routes = computed(() => [
 ])
 
 onMounted(async () => {
-  await authStore.getUserInformation()
+  // Only get user info if not already loaded
+  if (!authStore.userData || !authStore.session) {
+    await authStore.getUserInformation()
+  }
 
   if (authStore.userData?.role === 'nurse') {
     assignedRoutes.value = '/nurse-dashboard'

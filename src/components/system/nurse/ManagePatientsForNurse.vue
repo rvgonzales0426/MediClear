@@ -4,14 +4,20 @@ import TableComponent from '@/components/TableComponent.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
 import PatientDialog from '@/views/system/partials/PatientDialog.vue'
 import { usePatientStore } from '@/stores/patient'
+import { useAuthStore } from '@/stores/auth'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue3-toastify'
+import { usePatientSearch } from '@/composables/usePatientSearch'
 
 const router = useRouter()
 const patientStore = usePatientStore()
+const authStore = useAuthStore()
+const { paginatedPatients, currentPage, totalPage } = usePatientSearch()
 
 // Load patients on component mount
-onMounted(() => {
+onMounted(async () => {
+  await authStore.getUserInformation()
   patientStore.fetchPatients()
 })
 
@@ -24,13 +30,15 @@ const stats = computed(() => {
       text: 'Currently assigned',
       count: patientStore.totalPatients,
       color: 'blue',
+      icon: 'mdi-account-group-outline',
     },
     {
       id: 2,
-      title: ' Pending Discharge',
+      title: 'Pending Discharge',
       text: 'Awaiting approval',
       count: patientStore.pendingDischarge,
       color: 'orange',
+      icon: 'mdi-clock-alert-outline',
     },
     {
       id: 3,
@@ -38,20 +46,18 @@ const stats = computed(() => {
       text: 'Ready for release',
       count: patientStore.approvedPatients,
       color: 'green',
+      icon: 'mdi-check-circle-outline',
     },
     {
       id: 4,
       title: 'Released',
       text: 'Completed today',
       count: patientStore.releasedPatients,
-      color: null,
+      color: 'grey',
+      icon: 'mdi-exit-to-app',
     },
   ]
 })
-
-//Sample PageLink
-const totalPage = ref(3)
-const currentPage = ref(1)
 
 const isDialogVisible = ref(false)
 
@@ -62,8 +68,56 @@ const viewPatientInfo = (patient_id) => {
 }
 
 // Handle discharge request following MediClear patient workflow
-const handleRequestDischarge = (patient_id) => {
-  // TODO: Implement discharge request logic
+const handleRequestDischarge = async (patient_id) => {
+  if (!patient_id) {
+    console.error('Patient ID is undefined')
+    toast.error('Invalid patient ID', { position: 'top-center' })
+    return
+  }
+
+  try {
+    // Ensure user data is loaded
+    if (!authStore.userData) {
+      await authStore.getUserInformation()
+    }
+
+    // Format current date as YYYY-MM-DD
+    const currentDate = new Date()
+    const formattedDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`
+
+    // Get nurse name from user data
+    const nurseName = authStore.userData?.full_name || authStore.userData?.name || 'Nurse'
+
+    console.log('Auth user data:', authStore.userData)
+    console.log('Nurse name:', nurseName)
+
+    // Update patient status to 'Discharge Requested'
+    const updateData = {
+      patient_id: patient_id,
+      status: 'Discharge Requested',
+      request_date: formattedDate,
+      requested_by: nurseName,
+    }
+
+    console.log('Requesting discharge with data:', updateData)
+
+    const { data, error } = await patientStore.updatePatient(updateData)
+
+    if (error) {
+      console.error('Error requesting discharge:', error)
+      toast.error(`Failed to request discharge: ${error.message}`, { position: 'top-center' })
+      return
+    }
+
+    if (data) {
+      toast.success('Discharge request submitted successfully', { position: 'top-center' })
+      // Refresh patient list
+      await patientStore.fetchPatients()
+    }
+  } catch (err) {
+    console.error('Unexpected error:', err)
+    toast.error('An unexpected error occurred', { position: 'top-center' })
+  }
 }
 </script>
 
@@ -98,7 +152,11 @@ const handleRequestDischarge = (patient_id) => {
     <v-col cols="12" lg="12">
       <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
-          <TableComponent :patients="patientStore.patients" @view="viewPatientInfo" />
+          <TableComponent
+            :patients="paginatedPatients"
+            @view="viewPatientInfo"
+            @requestDischarge="handleRequestDischarge"
+          />
         </v-card-text>
       </v-card>
     </v-col>

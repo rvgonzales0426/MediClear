@@ -1,25 +1,100 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import TableComponent from '@/components/TableComponent.vue'
 import PatientActionTable from './PatientActionTable.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
 import DashBoardWidgets from '@/components/DashBoardWidgets.vue'
 import { useManagePatientsForDoctor } from './managePatientsForDoctor'
+import { toast } from 'vue3-toastify'
 
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-//Sample PageLink
-const totalPage = ref(3)
+//Pagination
+const itemsPerPage = 10
 const currentPage = ref(1)
 
 const { dischargingPatients, stats, patientStore } = useManagePatientsForDoctor()
+
+// Computed property for total pages
+const totalPage = computed(() => {
+  return Math.ceil(patientStore.totalPatients / itemsPerPage)
+})
+
+// Computed property for paginated patients
+const paginatedPatients = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return patientStore.patients.slice(start, end)
+})
 
 const viewPatientInfo = (patient_id) => {
   if (!patient_id) console.error('Patient ID is undefined')
 
   router.push({ name: 'patient-info', params: { id: patient_id } })
+}
+
+// Handle approve discharge request
+const handleApprove = async (patient_id) => {
+  if (!patient_id) {
+    console.error('Patient ID is undefined')
+    toast.error('Invalid patient ID', { position: 'top-center' })
+    return
+  }
+
+  try {
+    const { data, error } = await patientStore.updatePatient({
+      patient_id: patient_id,
+      status: 'Approved',
+    })
+
+    if (error) {
+      console.error('Error approving discharge:', error.message)
+      toast.error('Failed to approve discharge', { position: 'top-center' })
+      return
+    }
+
+    if (data) {
+      toast.success('Discharge approved successfully', { position: 'top-center' })
+      await patientStore.fetchPatients()
+    }
+  } catch (err) {
+    console.error('Unexpected error:', err)
+    toast.error('An unexpected error occurred', { position: 'top-center' })
+  }
+}
+
+// Handle reject discharge request
+const handleReject = async (patient_id) => {
+  if (!patient_id) {
+    console.error('Patient ID is undefined')
+    toast.error('Invalid patient ID', { position: 'top-center' })
+    return
+  }
+
+  try {
+    const { data, error } = await patientStore.updatePatient({
+      patient_id: patient_id,
+      status: 'Admitted',
+      request_date: null,
+      requested_by: null,
+    })
+
+    if (error) {
+      console.error('Error rejecting discharge:', error.message)
+      toast.error('Failed to reject discharge', { position: 'top-center' })
+      return
+    }
+
+    if (data) {
+      toast.success('Discharge request rejected', { position: 'top-center' })
+      await patientStore.fetchPatients()
+    }
+  } catch (err) {
+    console.error('Unexpected error:', err)
+    toast.error('An unexpected error occurred', { position: 'top-center' })
+  }
 }
 </script>
 
@@ -38,30 +113,47 @@ const viewPatientInfo = (patient_id) => {
     </v-col>
   </v-row>
 
-  <!-- Discharge Action Table -->
-  <v-row>
+  <!-- Discharge Action Table - Only show when there are pending requests -->
+  <v-row v-if="dischargingPatients.length > 0">
     <v-col cols="12" lg="12" md="10">
       <v-card
         title="Discharge Requests Awaiting Approval"
-        subtitle="Discharge Requests Awaiting Approval"
+        subtitle="Review and approve patient discharge requests"
       >
         <v-card-text>
-          <PatientActionTable :patients="dischargingPatients" @view="viewPatientInfo" />
+          <PatientActionTable
+            :patients="dischargingPatients"
+            @view="viewPatientInfo"
+            @approve="handleApprove"
+            @reject="handleReject"
+          />
         </v-card-text>
       </v-card>
     </v-col>
   </v-row>
 
   <!-- Table -->
-  <v-row v-if="patientStore.patients">
+  <v-row v-if="!patientStore.isLoading">
     <v-col cols="12" lg="12">
       <v-card title="Assigned Patients" subtitle="Patients currently under your care">
         <v-card-text>
-          <TableComponent :patients="patientStore.patients" @view="viewPatientInfo" />
+          <TableComponent :patients="paginatedPatients" @view="viewPatientInfo" />
         </v-card-text>
       </v-card>
     </v-col>
   </v-row>
 
-  <PaginationComponent v-model="currentPage" :totalPage="totalPage" />
+  <!-- Loading State -->
+  <v-row v-else>
+    <v-col cols="12" class="text-center py-8">
+      <v-progress-circular indeterminate color="primary" size="64" />
+      <div class="text-body-1 mt-4">Loading assigned patients...</div>
+    </v-col>
+  </v-row>
+
+  <PaginationComponent
+    v-if="!patientStore.isLoading"
+    v-model="currentPage"
+    :totalPage="totalPage"
+  />
 </template>

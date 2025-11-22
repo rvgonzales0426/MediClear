@@ -132,3 +132,23 @@ export const imageValidator = (value) => {
 
   return !value || !value.length || value[0].size < 2000000 || 'Image size should be less than 2 MB'
 }
+
+// 👉 Philippine Phone Number Validator
+export const phPhoneValidator = (value) => {
+  if (isEmpty(value)) return true
+
+  // Remove spaces, dashes, and parentheses for validation
+  const cleanedValue = String(value).replace(/[\s\-()]/g, '')
+
+  // Philippine phone number formats:
+  // Mobile: 09XX-XXX-XXXX or +639XX-XXX-XXXX (11 digits starting with 09, or 13 digits with +63)
+  // Landline: (0XX) XXX-XXXX or +63(XX) XXX-XXXX (10 digits starting with 0, or 12 digits with +63)
+  const mobileRegex = /^(09|\+639)\d{9}$/
+  const landlineRegex = /^(0\d{1,2}|\+63\d{1,2})\d{7}$/
+
+  return (
+    mobileRegex.test(cleanedValue) ||
+    landlineRegex.test(cleanedValue) ||
+    'Please enter a valid Philippine phone number (e.g., 09XX-XXX-XXXX or 02-XXXX-XXXX)'
+  )
+}

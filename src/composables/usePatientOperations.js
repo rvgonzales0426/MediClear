@@ -1,5 +1,6 @@
 import { ref, watch, computed } from 'vue'
 import { usePatientStore } from '@/stores/patient'
+import { useAuthStore } from '@/stores/auth'
 import { formatDateForSubmission } from '@/utils/helpers'
 import { formActionDefault } from './useSupabase'
 import { toast } from 'vue3-toastify'
@@ -12,6 +13,7 @@ export const usePatientOperations = (props, emits) => {
 
   //Load variables
   const patientStore = usePatientStore()
+  const authStore = useAuthStore()
   const isUpdate = ref(false)
   const refVForm = ref()
 
@@ -21,7 +23,16 @@ export const usePatientOperations = (props, emits) => {
     age_gender: null,
     addmission_date: null,
     status: 'Admitted',
-    attending_physician: '',
+    attending_doctor_id: null,
+    attending_doctor_name: null,
+    phone_number: null,
+    address: null,
+    date_of_birth: null,
+    emergency_contact_phone: null,
+    emergency_contact_name: null,
+    room_number: null,
+    ward: null,
+    bed_number: null,
   }
 
   const formData = ref({
@@ -49,6 +60,11 @@ export const usePatientOperations = (props, emits) => {
       addmission_date: formatDateForSubmission(formData.value.addmission_date),
     }
 
+    // Debug: Log the submission data
+    console.log('Submitting patient data:', {
+      attending_doctor_id: submissionData.attending_doctor_id,
+    })
+
     const { data, error } = isUpdate.value
       ? await patientStore.updatePatient(submissionData)
       : await patientStore.addPatient(submissionData)
@@ -57,7 +73,7 @@ export const usePatientOperations = (props, emits) => {
       console.error('Error submitting patient data:', error.message)
       // Handle error (e.g., show notification to user)
 
-      toast.error(error.message, { position: 'top-center' })
+      toast.error('An Error Occured', { position: 'top-center' })
       formAction.value.formProccess = false
       return
     } else if (data) {
@@ -66,7 +82,13 @@ export const usePatientOperations = (props, emits) => {
         { position: 'top-center' },
       )
       formAction.value.formProccess = false
-      await patientStore.fetchPatients()
+
+      // Fetch patients with user context
+      await authStore.getUserInformation()
+      const userRole = authStore.userData?.role
+      const userId = authStore.userData?.id
+      await patientStore.fetchPatients(userRole, userId)
+
       onFormReset()
       modal.value = false
     }

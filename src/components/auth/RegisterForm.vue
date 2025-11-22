@@ -50,8 +50,10 @@ const onSubmit = async () => {
     password: formData.value.password,
     options: {
       data: {
-        firstname: formData.value.first_name,
-        lastname: formData.value.last_name,
+        first_name: formData.value.first_name,
+        last_name: formData.value.last_name,
+        full_name: `${formData.value.first_name} ${formData.value.last_name}`,
+        phone_number: formData.value.phone_number,
         role: formData.value.role,
       },
     },
@@ -59,8 +61,12 @@ const onSubmit = async () => {
 
   if (error) {
     state.errorMessage = error.message
-  } else if (data) {
-    state.successMessage = ' Registered Successfully'
+    state.isLoading = false
+    return
+  }
+
+  if (data?.user) {
+    state.successMessage = 'Registered Successfully'
     state.isLoading = false
     // Reset Form
     refVForm.value?.reset()

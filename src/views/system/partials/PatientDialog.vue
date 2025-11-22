@@ -1,6 +1,8 @@
 <script setup>
+import { onMounted, watch } from 'vue'
 import { usePatientOperations } from '@/composables/usePatientOperations'
-import { requiredValidator } from '@/utils/validators'
+import { useDoctors } from '@/composables/useDoctors'
+import { requiredValidator, phPhoneValidator } from '@/utils/validators'
 
 const props = defineProps({
   isDialogVisible: {
@@ -17,6 +19,51 @@ const emits = defineEmits(['update:isDialogVisible'])
 const { formAction, isUpdate, modal, formData, refVForm, onFormSubmit } = usePatientOperations(
   props,
   emits,
+)
+
+const { doctors, fetchDoctors, doctorOptions, isLoading, error } = useDoctors()
+
+// Fetch doctors when component mounts
+onMounted(async () => {
+  console.log('PatientDialog mounted, fetching doctors...')
+  await fetchDoctors()
+  console.log('Doctors after fetch:', doctors.value)
+  console.log('Doctor options:', doctorOptions())
+})
+
+// Watch for patient data changes (when editing)
+watch(
+  () => props.patientData,
+  (newPatientData) => {
+    if (!newPatientData && !newPatientData?.attending_doctor_id && doctors.value.length <= 0) return
+    // If editing and doctor name is missing, populate it from doctors list
+    if (!newPatientData.attending_doctor_name) {
+      const doctor = doctors.value.find((d) => d.id === newPatientData.attending_doctor_id)
+      if (doctor) formData.value.attending_doctor_name = doctor.full_name || doctor.email
+    }
+  },
+  { immediate: true },
+)
+
+// Watch for doctor selection and update attending_doctor_name
+watch(
+  () => formData.value.attending_doctor_id,
+  (newDoctorId) => {
+    console.log('Doctor ID changed to:', newDoctorId)
+    if (newDoctorId) {
+      const selectedDoctor = doctors.value.find((d) => d.id === newDoctorId)
+      console.log('Selected doctor:', selectedDoctor)
+      if (selectedDoctor) {
+        formData.value.attending_doctor_name = selectedDoctor.full_name || selectedDoctor.email
+        console.log('Set attending_doctor_name to:', formData.value.attending_doctor_name)
+      } else {
+        console.warn('⚠️ Doctor not found in list for ID:', newDoctorId)
+      }
+    } else {
+      formData.value.attending_doctor_name = ''
+      console.log('Cleared attending_doctor_name')
+    }
+  },
 )
 
 const patientStatus = [
@@ -37,6 +84,14 @@ const patientStatus = [
     value: 'Released',
   },
 ]
+
+const wardOptions = [
+  { title: 'General Medicine', value: 'general medicine' },
+  { title: 'Cardiology', value: 'cardiology' },
+  { title: 'Emergency', value: 'emergency' },
+  { title: 'Orthopedics', value: 'orthopedics' },
+  { title: 'Maternity', value: 'matternity' },
+]
 </script>
 
 <template>
@@ -47,6 +102,14 @@ const patientStatus = [
           <v-row>
             <v-col cols="12">
               <v-text-field
+                label="Patient Name"
+                type="text"
+                v-model="formData.patient_name"
+                :rules="[requiredValidator]"
+              />
+            </v-col>
+            <v-col cols="6">
+              <v-text-field
                 label="Case Number"
                 type="number"
                 v-model="formData.case_number"
@@ -54,11 +117,47 @@ const patientStatus = [
               />
             </v-col>
 
-            <v-col cols="12">
+            <v-col cols="6">
               <v-text-field
-                label="Patient Name"
+                label="Phone number"
+                type="number"
+                v-model="formData.phone_number"
+                :rules="[requiredValidator, phPhoneValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Emergency Contact Name"
                 type="text"
-                v-model="formData.patient_name"
+                v-model="formData.emergency_contact_name"
+                :rules="[requiredValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Emergency Contact Number"
+                type="number"
+                v-model="formData.emergency_contact_phone"
+                :rules="[requiredValidator, phPhoneValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Room Number"
+                type="text"
+                v-model="formData.room_number"
+                :rules="[requiredValidator]"
+              />
+            </v-col>
+
+            <v-col cols="6">
+              <v-text-field
+                label="Bed Number"
+                type="text"
+                v-model="formData.bed_number"
                 :rules="[requiredValidator]"
               />
             </v-col>
@@ -69,32 +168,80 @@ const patientStatus = [
                 type="text"
                 v-model="formData.age_gender"
                 :rules="[requiredValidator]"
+                placeholder="Ex.20/F or 20/M"
               />
             </v-col>
 
-            <v-col cols="6 ">
+            <v-col cols="6">
               <v-select
                 label="Status"
                 v-model="formData.status"
                 :items="patientStatus"
-                :tile="patientStatus.title"
+                :title="patientStatus.title"
                 :value="patientStatus.value"
                 :rules="[requiredValidator]"
               ></v-select>
             </v-col>
 
-            <v-col cols="12">
+            <v-col cols="6">
               <v-text-field
-                label="Attending Physician"
+                label="Adress"
                 type="text"
-                v-model="formData.attending_physician"
+                v-model="formData.address"
+                :rules="[requiredValidator]"
+              ></v-text-field>
+            </v-col>
+
+            <v-col cols="6">
+              <v-date-input
+                label="Date of Birth"
+                fprmat="yyyy/MM/dd"
+                v-model="formData.date_of_birth"
                 :rules="[requiredValidator]"
               />
             </v-col>
 
             <v-col cols="12">
+              <v-select
+                label="Ward"
+                v-model="formData.ward"
+                :items="wardOptions"
+                :title="wardOptions.title"
+                :value="wardOptions.value"
+                :rules="[requiredValidator]"
+              ></v-select>
+            </v-col>
+
+            <v-col cols="12">
+              <v-select
+                label="Attending Physician"
+                v-model="formData.attending_doctor_id"
+                :items="doctorOptions()"
+                item-title="title"
+                item-value="value"
+                :rules="[requiredValidator]"
+                :loading="isLoading"
+                :disabled="isLoading || error"
+                :hint="error || 'Select the doctor assigned to this patient'"
+                :error="!!error"
+                persistent-hint
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props" :subtitle="item.raw.subtitle"> </v-list-item>
+                </template>
+                <template v-slot:no-data>
+                  <v-list-item>
+                    <v-list-item-title>
+                      {{ error || 'No doctors registered. Please register a doctor first.' }}
+                    </v-list-item-title>
+                  </v-list-item>
+                </template>
+              </v-select>
+            </v-col>
+
+            <v-col cols="12">
               <v-date-input
-                label="Addmission Date"
+                label="Admission Date"
                 format="yyyy/MM/dd"
                 v-model="formData.addmission_date"
                 :rules="[requiredValidator]"
