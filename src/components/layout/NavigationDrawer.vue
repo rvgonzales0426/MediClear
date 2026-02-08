@@ -3,11 +3,13 @@ import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { getAvatarText } from '@/utils/helpers.js'
+import { usePatientStore } from '@/stores/patient'
 
 const props = defineProps(['isDrawerOpen'])
 const emit = defineEmits(['update:isDrawerOpen'])
 
 const authStore = useAuthStore()
+const patientStore = usePatientStore()
 const router = useRouter()
 
 const drawer = computed({
@@ -38,6 +40,7 @@ const handleSignOut = async () => {
   isLoading.value = true
   try {
     await authStore.signOutUser()
+    patientStore.$reset()
     router.replace('/login')
   } catch (error) {
     console.error('Error signing out:', error)
@@ -58,7 +61,10 @@ const routes = computed(() => [
 ])
 
 onMounted(async () => {
-  await authStore.getUserInformation()
+  // Only get user info if not already loaded
+  if (!authStore.userData || !authStore.session) {
+    await authStore.getUserInformation()
+  }
 
   if (authStore.userData?.role === 'nurse') {
     assignedRoutes.value = '/nurse-dashboard'

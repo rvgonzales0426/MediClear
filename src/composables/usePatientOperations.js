@@ -1,65 +1,120 @@
-import { ref } from 'vue'
-import { supabase } from '@/composables/useSupabase.js'
+import { ref, watch, computed } from 'vue'
+import { usePatientStore } from '@/stores/patient'
+import { useAuthStore } from '@/stores/auth'
+import { formatDateForSubmission } from '@/utils/helpers'
+import { formActionDefault } from './useSupabase'
+import { toast } from 'vue3-toastify'
 
-export const usePatientOperations = () => {
-  const loading = ref(false)
-  const error = ref(null)
+export const usePatientOperations = (props, emits) => {
+  const modal = computed({
+    get: () => props?.isDialogVisible,
+    set: (newVal) => emits('update:isDialogVisible', newVal),
+  })
 
-  const addPatient = async (patientData) => {
-    try {
-      loading.value = true
-      error.value = null
+  //Load variables
+  const patientStore = usePatientStore()
+  const authStore = useAuthStore()
+  const isUpdate = ref(false)
+  const refVForm = ref()
 
-      // Validate required fields
-      if (!patientData.case_number?.trim()) {
-        throw new Error('Case number is required')
-      }
-      if (!patientData.patient_name?.trim()) {
-        throw new Error('Patient name is required')
-      }
-      if (!patientData.date_of_birth) {
-        throw new Error('Date of birth is required')
-      }
+  const formDataDefault = {
+    case_number: '',
+    patient_name: '',
+    age_gender: null,
+    addmission_date: null,
+    status: 'Admitted',
+    attending_doctor_id: null,
+    attending_doctor_name: null,
+    phone_number: null,
+    address: null,
+    date_of_birth: null,
+    emergency_contact_phone: null,
+    emergency_contact_name: null,
+    room_number: null,
+    ward: null,
+    bed_number: null,
+  }
 
-      // Transform data to match your database schema
-      const patientToInsert = {
-        caseNumber: patientData.case_number,
-        patientName: patientData.patient_name,
-        date_of_birth:
-          patientData.date_of_birth instanceof Date
-            ? patientData.date_of_birth.toISOString().split('T')[0]
-            : patientData.date_of_birth,
-        ageGender: patientData.age_gender || null,
-        status: patientData.status || 'Active',
-        attendingPhysician: patientData.attending_phyisician,
-        admissionDate: patientData.addmission_date
-          ? patientData.addmission_date instanceof Date
-            ? patientData.addmission_date.toISOString().split('T')[0]
-            : patientData.addmission_date
-          : new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
+  const formData = ref({
+    ...formDataDefault,
+  })
 
-      const { data, error: supabaseError } = await supabase
-        .from('patients')
-        .insert([patientToInsert])
-        .select()
+  const formAction = ref({ ...formActionDefault })
 
-      if (supabaseError) throw supabaseError
+  //E check niya if isa patentdata ang na pass sa props para ma determine kung add or update
+  watch(
+    () => props?.patientData,
+    () => {
+      isUpdate.value = props?.patientData ? true : false
+      formData.value = isUpdate.value ? { ...props.patientData } : { ...formDataDefault }
+    },
+    { immediate: true },
+  )
 
-      return { success: true, data }
-    } catch (err) {
-      error.value = err.message
-      return { success: false, error: err.message }
-    } finally {
-      loading.value = false
+  const onSubmit = async () => {
+    formAction.value.formProccess = true
+
+    // Format the data before submission
+    const submissionData = {
+      ...formData.value,
+      addmission_date: formatDateForSubmission(formData.value.addmission_date),
+    }
+
+    // Debug: Log the submission data
+    console.log('Submitting patient data:', {
+      attending_doctor_id: submissionData.attending_doctor_id,
+    })
+
+    const { data, error } = isUpdate.value
+      ? await patientStore.updatePatient(submissionData)
+      : await patientStore.addPatient(submissionData)
+
+    if (error) {
+      console.error('Error submitting patient data:', error.message)
+      // Handle error (e.g., show notification to user)
+
+      toast.error('An Error Occured', { position: 'top-center' })
+      formAction.value.formProccess = false
+      return
+    } else if (data) {
+      toast.success(
+        isUpdate.value ? 'Successfully updated patient data.' : 'Successfully added patient data.',
+        { position: 'top-center' },
+      )
+      formAction.value.formProccess = false
+
+      // Fetch patients with user context
+      await authStore.getUserInformation()
+      const userRole = authStore.userData?.role
+      const userId = authStore.userData?.id
+      await patientStore.fetchPatients(userRole, userId)
+
+      onFormReset()
+      modal.value = false
     }
   }
 
+  //Trigger Validators
+  const onFormSubmit = async () => {
+    const form = refVForm.value
+    const { valid: isValid } = await form?.validate()
+    if (isValid) onSubmit()
+  }
+
+  // Reset Form
+  const onFormReset = () => {
+    const form = refVForm.value
+    if (form) form.reset()
+    formData.value = { ...formDataDefault }
+    formAction.value = { ...formActionDefault }
+    modal.value = false
+  }
   return {
-    loading,
-    error,
-    addPatient,
+    modal,
+    isUpdate,
+    formAction,
+    formData,
+    onFormSubmit,
+    refVForm,
   }
 }

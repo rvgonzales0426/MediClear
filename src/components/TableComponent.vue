@@ -1,61 +1,89 @@
 <script setup>
+import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import dayjs from 'dayjs'
 defineProps({
-  columns: {
-    type: Object,
-    required: true,
-  },
-  data: {
+  patients: {
     type: Array,
     required: true,
   },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
 })
 
-defineEmits(['view'])
+const authStore = useAuthStore()
+
+defineEmits(['view', 'requestDischarge'])
+
+// Status color mapping
+const statusColors = {
+  'Discharge Requested': 'orange',
+  Approved: 'green',
+  Released: undefined,
+  Admitted: 'blue',
+}
+
+// Computed property for user role
+const isNurse = computed(() => authStore.userData?.role === 'nurse')
 </script>
 
 <template>
   <v-table>
     <thead>
       <tr>
-        <th v-for="column in columns" :key="column.key" class="text-left font-weight-bold">
-          {{ column.label }}
-        </th>
+        <th class="text-left font-weight-bold">Patient Name</th>
+        <th class="text-left font-weight-bold">Admission Date</th>
+        <th class="text-left font-weight-bold">Status</th>
+        <th class="text-left font-weight-bold">Attending Physician</th>
         <th class="text-left font-weight-bold">Actions</th>
       </tr>
     </thead>
     <tbody>
-      <tr v-if="loading">
-        <td :colspan="columns.length" class="text-center">
-          <v-progress-circular indeterminate></v-progress-circular>
+      <!-- Empty state -->
+      <tr v-if="!patients || patients.length === 0">
+        <td colspan="5" class="text-center py-8">
+          <v-icon size="64" color="grey-lighten-1" class="mb-2">mdi-account-off-outline</v-icon>
+          <div class="text-h6 text-grey-darken-1">No Patients Assigned</div>
+          <div class="text-caption text-grey">You currently have no patients under your care</div>
         </td>
       </tr>
+
+      <!-- Patient rows -->
       <template v-else>
-        <tr v-for="row in data" :key="row.id">
-          <td v-for="column in columns" :key="column.key">
-            <template v-if="column.key === 'status'">
-              <v-chip :color="column.color[row[column.key]]">{{ row[column.key] }}</v-chip>
-            </template>
-            <template v-else>
-              {{ row[column.key] }}
-            </template>
-          </td>
-
-          <td class="d-flex align-center ga-2">
-            <v-btn size="small" @click="$emit('view', data.id)"
-              ><v-icon>mdi-eye-outline</v-icon>View</v-btn
-            >
-
-            <v-btn
-              color="orange"
+        <tr v-for="patient in patients" :key="patient.id">
+          <td class="py-3">{{ patient.patient_name }}</td>
+          <td class="py-3">{{ dayjs(patient.admission_date).format('YYYY-MMM-DD') }}</td>
+          <td class="py-3">
+            <v-chip
+              :color="statusColors[patient.status]"
+              variant="flat"
               size="small"
-              prepend-icon="mdi-file-document-outline "
-              v-if="row.status === 'Admitted'"
-              >Request Discharge</v-btn
+              class="font-weight-medium"
             >
+              {{ patient.status }}
+            </v-chip>
+          </td>
+          <td class="py-3">{{ patient.attending_doctor_name }}</td>
+          <td class="py-3">
+            <div class="d-flex align-center ga-2">
+              <v-btn
+                size="small"
+                variant="outlined"
+                prepend-icon="mdi-eye-outline"
+                @click="$emit('view', patient.patient_id)"
+              >
+                View
+              </v-btn>
+
+              <v-btn
+                v-if="isNurse && patient.status === 'Admitted'"
+                color="orange"
+                size="small"
+                variant="flat"
+                prepend-icon="mdi-file-document-outline"
+                @click="$emit('requestDischarge', patient.patient_id)"
+              >
+                Request Discharge
+              </v-btn>
+            </div>
           </td>
         </tr>
       </template>
